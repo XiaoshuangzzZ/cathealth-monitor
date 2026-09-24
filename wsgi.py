@@ -10,7 +10,7 @@ if os.environ.get('RENDER'):
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend', 'flask'))
 
 # 導入 Flask 應用
-from backend.flask.app import app as application
+from app import app as application
 
 # Render 使用 'application' 變量
 app = application

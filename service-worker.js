@@ -3,9 +3,10 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/dashboard.html',
-  '/health-analysis.html',
-  '/css/style.css',
+  '/auth.js',
+  '/hospital-map.js',
   '/manifest.json',
+  '/service-worker.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 

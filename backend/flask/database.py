@@ -71,7 +71,7 @@ class Database:
 
         conn.commit()
         conn.close()
-        print("✅ 數據庫初始化完成")
+        print("[DB] Database initialized")
 
     # ========== 用戶相關操作 ==========
 
@@ -319,6 +319,3 @@ class Database:
             'analysis_count': analysis_count,
             'latest_analysis': dict(latest_analysis) if latest_analysis else None
         }
-
-# 全局數據庫實例
-db = Database()

@@ -4,10 +4,11 @@
   "description": "CatHealth Monitor - Pet Health Tracking App",
   "main": "index.html",
   "scripts": {
-    "build": "echo \"Building static files...\"",
-    "sync": "npx cap sync",
-    "android": "npx cap open android",
-    "build:apk": "npm run sync && cd android && ./gradlew assembleDebug"
+    "build:www": "node build-www.js",
+    "sync:android": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "build:apk": "npm run build:www && npm run sync:android && cd android && gradlew.bat assembleDebug",
+    "build:apk:unix": "npm run build:www && npm run sync:android && cd android && ./gradlew assembleDebug"
   },
   "keywords": ["cat", "health", "pet", "monitor"],
   "author": "CatHealth Team",

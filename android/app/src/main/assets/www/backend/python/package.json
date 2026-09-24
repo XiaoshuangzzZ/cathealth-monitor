@@ -1,9 +1,0 @@
-﻿{
-  "name": "cathealth-python-backend",
-  "version": "1.0.0",
-  "description": "Python backend service - do not use npm",
-  "private": true,
-  "scripts": {
-    "start": "echo 'This is a Python service, not Node.js' && exit 1"
-  }
-}

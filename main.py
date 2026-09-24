@@ -6,9 +6,9 @@ import os
 backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'backend', 'flask')
 os.chdir(backend_dir)
 
-# 添加路径
-sys.path.insert(0, backend_dir)
+# 添加路径：backend/flask 優先，避免與頂層 app.py 衝突
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
 
 # 导入并运行 Flask
 from app import app

@@ -15,7 +15,20 @@
       "Bash(git pull *)",
       "Bash(git push *)",
       "Bash(vercel *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(python3 *)",
+      "Bash(./gradlew.bat assembleDebug --no-daemon)",
+      "Bash(unzip -l app-debug.apk)",
+      "Bash(./gradlew.bat clean *)",
+      "Bash(jarsigner -verify -verbose -certs /c/Users/user/cathealth-app/android/app/build/outputs/apk/debug/app-debug.apk)",
+      "Bash(./gradlew.bat --stop --no-daemon)",
+      "Bash(node build-www.js)",
+      "Bash(npx cap *)",
+      "Bash(git -C /c/Users/user/cathealth-app log --oneline -5 -- index.html dashboard.html auth.js build-www.js)",
+      "Bash(git -C /c/Users/user/cathealth-app remote -v)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'feat: add desktop footer with feedback, contact and GitHub links *)"
     ]
   }
 }

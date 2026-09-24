@@ -18,7 +18,11 @@ CORS(app, resources={
 })
 
 # 配置
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'cathealth-secret-key-change-in-production')
+# 安全修复：不允许可预测的默认密钥。未设置 SECRET_KEY 时直接拒绝启动，
+# 避免攻击者用已知密钥伪造 JWT。
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+if not app.config['SECRET_KEY']:
+    raise RuntimeError("SECRET_KEY environment variable is required. Refusing to start with a predictable default.")
 app.config['TOKEN_EXPIRY'] = 30  # 天
 
 # 設置數據庫路徑（Render 使用 /data）
@@ -109,7 +113,8 @@ def analyze_with_backup_ai():
         },
         "processing_time": round(random.uniform(0.5, 1.5), 2),
         "analyzed_at": datetime.datetime.now().isoformat(),
-        "service": "backup_ai"
+        "service": "backup_ai",
+        "disclaimer": "本结果由演示算法生成，非医学诊断，请勿据此自行用药，如有异常请咨询兽医"
     }
 
 # YOLO狀態
@@ -122,7 +127,7 @@ def download_model():
     import os
 
     model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/datasets/lingshuang/maomaoyolo/resolve/main/best.pt')
-    backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend", "python")
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(backend_dir, "models", "best.pt")
 
     # 確保目錄存在
@@ -157,9 +162,8 @@ def init_yolo():
         if 'yolo' in sys.modules:
             del sys.modules['yolo']
 
-        backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend", "python")
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
         sys.path.insert(0, backend_dir)
-        sys.path.insert(0, os.path.join(backend_dir, "src"))
 
         from yolo.detector import YOLODetector
         import yolo.detector as detector_module
@@ -241,7 +245,8 @@ def home():
 @app.route('/<path:filename>')
 def serve_file(filename):
     if filename in ['index.html', 'dashboard.html', 'manifest.json', 'service-worker.js']:
-        return send_from_directory('.', filename)
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        return send_from_directory(repo_root, filename)
     return jsonify({"error": "Not found"}), 404
 
 # ========== 認證 API ==========
@@ -261,8 +266,9 @@ def register():
     if not email or not password or not name:
         return jsonify({'success': False, 'error': 'Email, password and name are required'}), 400
 
-    if len(password) < 6:
-        return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
+    # 安全修复：密码策略加强（至少 8 位）
+    if len(password) < 8:
+        return jsonify({'success': False, 'error': 'Password must be at least 8 characters'}), 400
 
     user = db.create_user(email, password, name)
     if not user:
@@ -288,26 +294,23 @@ def register():
 def login():
     """用戶登錄"""
     data = request.get_json()
-    print(f"[LOGIN] Received data: {data}")
 
     if not data:
         return jsonify({'success': False, 'error': 'No data provided'}), 400
 
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
-    print(f"[LOGIN] Email: {email}, Password length: {len(password)}")
+    # 安全修复：不记录密码相关信息
 
     if not email or not password:
         return jsonify({'success': False, 'error': 'Email and password are required'}), 400
 
     user = db.get_user_by_email(email)
-    print(f"[LOGIN] User found: {user is not None}")
 
     if not user:
         return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
 
     password_valid = db.verify_password(user, password)
-    print(f"[LOGIN] Password valid: {password_valid}")
 
     if not password_valid:
         return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
@@ -462,6 +465,17 @@ def delete_cat(cat_id):
         'message': 'Cat deleted successfully'
     })
 
+# ========== 工具函数 ==========
+
+def check_cat_ownership(cat_id, user_id):
+    """校验猫咪是否属于当前用户，返回 (cat, error_response)"""
+    if cat_id is None:
+        return None, None
+    cat = db.get_cat_by_id(cat_id)
+    if not cat or cat['user_id'] != user_id:
+        return None, (jsonify({'success': False, 'error': 'Cat not found or no permission'}), 403)
+    return cat, None
+
 # ========== 健康記錄 API ==========
 
 @app.route('/api/health-records', methods=['GET'])
@@ -470,7 +484,8 @@ def get_health_records():
     """獲取健康記錄"""
     user = g.current_user
     cat_id = request.args.get('cat_id', type=int)
-    limit = request.args.get('limit', 50, type=int)
+    # 安全修复：限制 limit 上限，防止超大数据量响应
+    limit = min(request.args.get('limit', 50, type=int) or 50, 100)
 
     records = db.get_user_health_records(user['id'], cat_id=cat_id, limit=limit)
     return jsonify({
@@ -485,10 +500,16 @@ def create_health_record():
     user = g.current_user
     data = request.get_json()
 
+    # 安全修复：校验 cat_id 归属，防止越权关联他人/不存在的猫
+    cat_id = data.get('cat_id') if data else None
+    _, ownership_error = check_cat_ownership(cat_id, user['id'])
+    if ownership_error:
+        return ownership_error
+
     import json
     record = db.create_health_record(
         user_id=user['id'],
-        cat_id=data.get('cat_id'),
+        cat_id=cat_id,
         record_type=data.get('record_type', 'stool_analysis'),
         result_data=json.dumps(data.get('result_data')) if data.get('result_data') else None,
         risk_level=data.get('risk_level'),
@@ -558,6 +579,11 @@ def analyze():
         data = request.get_json()
         cat_id = data.get('cat_id') if data else None
 
+        # 安全修复：校验 cat_id 归属，防止越权写入记录
+        _, ownership_error = check_cat_ownership(cat_id, user['id'])
+        if ownership_error:
+            return ownership_error
+
         # 確保YOLO已加載
         if not yolo_available:
             print("[API] Initializing YOLO...")
@@ -618,13 +644,15 @@ def analyze():
         )
 
         result["success"] = True
+        result["disclaimer"] = "本结果由 AI 模型自动生成，仅供参考，不构成医疗诊断，如有异常请咨询专业兽医"
         return jsonify(result)
 
     except Exception as e:
         import traceback
         print(f"[API] ERROR: {e}")
         traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)}), 500
+        # 安全修复：不向客户端暴露内部错误细节
+        return jsonify({"success": False, "error": "Internal server error, please try again later"}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10002))

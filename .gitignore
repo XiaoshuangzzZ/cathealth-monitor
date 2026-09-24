@@ -32,3 +32,21 @@ backup_20251021_075216
 .vercel
 # .github  # Allow GitHub Actions workflows
 .gitattributes
+
+# ===== 安全：敏感文件禁止提交 =====
+android/*.keystore
+android/key.properties
+android/local.properties
+.env*
+!.env.example
+
+# ===== 生成物 / 拷贝 =====
+www/
+qr_codes/
+android/app/src/main/assets/www/
+android/app/src/main/assets/public/
+android/app/build/
+android/.gradle/
+__pycache__/
+*.pyc
+*.pyo

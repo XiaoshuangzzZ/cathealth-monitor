@@ -1,8 +1,7 @@
 {
   "appId": "com.cathealth.monitor",
   "appName": "CatHealth Monitor",
-  "webDir": ".",
-  "bundledWebRuntime": false,
+  "webDir": "www",
   "server": {
     "hostname": "localhost",
     "androidScheme": "https",
@@ -22,7 +21,7 @@
     }
   },
   "android": {
-    "allowMixedContent": true,
+    "allowMixedContent": false,
     "captureInput": true,
     "webContentsDebuggingEnabled": false
   }

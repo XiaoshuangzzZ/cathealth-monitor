@@ -1,0 +1,30 @@
+{
+	"appId": "com.cathealth.monitor",
+	"appName": "CatHealth Monitor",
+	"webDir": "www",
+	"server": {
+		"hostname": "localhost",
+		"androidScheme": "https",
+		"allowNavigation": [
+			"cathealth-monitor-fn41.onrender.com"
+		]
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 3000,
+			"launchAutoHide": true,
+			"backgroundColor": "#F8F4E9",
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP"
+		},
+		"StatusBar": {
+			"backgroundColor": "#D4A574",
+			"style": "LIGHT"
+		}
+	},
+	"android": {
+		"allowMixedContent": false,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": false
+	}
+}
