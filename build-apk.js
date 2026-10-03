@@ -97,7 +97,7 @@ function main() {
   run(`"${gradlew}" assembleDebug`, {
     cwd,
     env,
-    shell: isWin ? 'cmd.exe' : '/bin/bash'
+    shell: true
   });
 
   const apkPath = path.join(__dirname, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
