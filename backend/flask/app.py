@@ -655,6 +655,10 @@ def analyze():
         return jsonify({"success": False, "error": "Internal server error, please try again later"}), 500
 
 if __name__ == '__main__':
+    # 啟動時預先載入 YOLO 模型，避免第一次請求時等待下載
+    print("[SERVER] Preloading YOLO model on startup...")
+    init_yolo()
+
     port = int(os.environ.get('PORT', 10002))
     print(f"[SERVER] Starting on http://127.0.0.1:{port}")
     print(f"[SERVER] Database: {db.db_path}")
