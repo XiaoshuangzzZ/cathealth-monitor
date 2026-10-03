@@ -126,7 +126,7 @@ def download_model():
     import urllib.request
     import os
 
-    model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/datasets/lingshuang/maomaoyolo/resolve/main/best.pt')
+    model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best.pt')
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(backend_dir, "models", "best.pt")
 
