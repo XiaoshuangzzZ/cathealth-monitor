@@ -2289,17 +2289,27 @@ async function handleImageUpload(file) {
         // 获取 token
         const token = localStorage.getItem('cathealth_token');
 
-        const response = await fetch(CLOUD_AI_URL + "/api/ai/analyze", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({
-                image: imageData
-            })
-        });
-        
+        // Render 免費版喚醒 + 下載模型可能需要較長時間，設置 120 秒超時
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+        let response;
+        try {
+            response = await fetch(CLOUD_AI_URL + "/api/ai/analyze", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    image: imageData
+                }),
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
         console.log("响应状态:", response.status);
         
         if (!response.ok) {
@@ -2319,6 +2329,17 @@ async function handleImageUpload(file) {
         console.error("[DEBUG] API调用失败:", error);
         console.error("[DEBUG] Error stack:", error.stack);
 
+        // 區分超時與其他網路錯誤
+        let errorMsg = error.message || "未知錯誤";
+        let extraHint = "";
+        if (error.name === "AbortError" || errorMsg.includes("timeout") || errorMsg.includes("The operation timed out")) {
+            errorMsg = "請求超時";
+            extraHint = "Render 免費版喚醒需要 30-60 秒，請重新嘗試。";
+        } else if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+            errorMsg = "無法連接到後端服務";
+            extraHint = "可能原因：<br>1. 後端正在啟動中（Render 免費版剛喚醒）<br>2. 手機網路不穩定<br>3. 後端服務暫時不可用";
+        }
+
         // 显示错误信息
         const detectionResults = document.getElementById("detection-results");
         if (detectionResults) {
@@ -2326,10 +2347,12 @@ async function handleImageUpload(file) {
                 <h3 style="color: #dc3545; text-align: center;">
                     <i class="fas fa-exclamation-triangle"></i> 分析失败
                 </h3>
-                <p style="text-align: center;">${error.message}</p>
+                <p style="text-align: center;">${errorMsg}</p>
+                <p style="text-align: center; color: var(--gray); font-size: 0.85rem; line-height: 1.6;">
+                    ${extraHint}
+                </p>
                 <p style="text-align: center; color: var(--gray); font-size: 0.8rem;">
-                    后端服务: ${CLOUD_AI_URL}<br>
-                    错误详情: ${error.stack ? error.stack.substring(0, 100) : '无'}
+                    后端服务: ${CLOUD_AI_URL}
                 </p>
                 <div style="text-align: center; margin-top: 20px;">
                     <button class="btn btn-primary" onclick="analyzeNewImage()">重新尝试</button>
