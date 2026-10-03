@@ -7,8 +7,8 @@
     "build:www": "node build-www.js",
     "sync:android": "npx cap sync android",
     "open:android": "npx cap open android",
-    "build:apk": "npm run build:www && npm run sync:android && cd android && gradlew.bat assembleDebug",
-    "build:apk:unix": "npm run build:www && npm run sync:android && cd android && ./gradlew assembleDebug"
+    "build:apk": "node build-apk.js",
+    "build:apk:unix": "node build-apk.js"
   },
   "keywords": ["cat", "health", "pet", "monitor"],
   "author": "CatHealth Team",

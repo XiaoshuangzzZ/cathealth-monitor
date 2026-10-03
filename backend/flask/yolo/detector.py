@@ -205,7 +205,7 @@ class YOLODetector:
                 "confidence": round(confidence, 3),
                 "class_id": class_id,
                 "class_name": class_info["name"],
-                "features": f"YOLOv8检测 - {class_info['name']}",
+                "features": f"YOLOv11检测 - {class_info['name']}",
                 "detection_count": detection_count,
                 "is_real_detection": True
             },
@@ -224,9 +224,9 @@ class YOLODetector:
                 "color": class_info["color"]
             },
             "analysis_info": {
-                "type": "YOLOv8真实检测",
+                "type": "YOLOv11真实检测",
                 "model": os.path.basename(self.model_path),
-                "detection_method": "YOLOv8物体检测",
+                "detection_method": "YOLOv11物体检测",
                 "is_real_ai": True
             }
         }
@@ -269,14 +269,14 @@ class YOLODetector:
                 "confidence": 0,
                 "class_id": -1,
                 "class_name": "未检测到",
-                "features": "YOLOv8未在图像中检测到目标",
+                "features": "YOLOv11未在图像中检测到目标",
                 "detection_count": 0,
                 "is_real_detection": False
             },
             "health_analysis": {
                 "risk_level": "unknown",
                 "message": "未检测到目标",
-                "description": "YOLOv8未在图像中检测到猫咪排泄物，请确保图片清晰可见",
+                "description": "YOLOv11未在图像中检测到猫咪排泄物，请确保图片清晰可见",
                 "confidence": 0,
                 "recommendation": "请上传更清晰的猫咪排泄物照片",
                 "detected_class": -1
@@ -287,7 +287,7 @@ class YOLODetector:
                 "color": "#808080"
             },
             "analysis_info": {
-                "type": "YOLOv8真实检测",
+                "type": "YOLOv11真实检测",
                 "model": os.path.basename(self.model_path),
                 "detection_method": "未检测到目标",
                 "is_real_ai": True
@@ -324,9 +324,9 @@ class YOLODetector:
                 "color": class_info["color"]
             },
             "analysis_info": {
-                "type": "YOLOv8低置信度检测",
+                "type": "YOLOv11低置信度检测",
                 "model": os.path.basename(self.model_path),
-                "detection_method": "YOLOv8物体检测(置信度<0.1)",
+                "detection_method": "YOLOv11物体检测(置信度<0.1)",
                 "is_real_ai": True,
                 "actual_confidence": round(actual_confidence, 3)
             }
@@ -357,7 +357,7 @@ class YOLODetector:
                 "color": "#dc3545"
             },
             "analysis_info": {
-                "type": "YOLOv8检测失败",
+                "type": "YOLOv11检测失败",
                 "model": os.path.basename(self.model_path) if self.model_path else "none",
                 "detection_method": "检测异常",
                 "is_real_ai": False,

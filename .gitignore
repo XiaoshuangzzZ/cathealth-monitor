@@ -49,4 +49,4 @@ android/app/build/
 android/.gradle/
 __pycache__/
 *.pyc
-*.pyo
+*.pyo".claude/settings.local.json" 
