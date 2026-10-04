@@ -91,7 +91,7 @@ class YOLODetector:
                 "prevention": "遵循7-10天换粮法；避免喂食人类食物；定期驱虫；减少环境压力；保持猫砂盆清洁"
             }
         }
-        self.conf_threshold = 0.001  # 进一步降低置信度阈值以便检测更多目标
+        self.conf_threshold = 0.25  # 过滤低置信度噪声，避免随机结果
 
     def load_model(self):
         """加载YOLO模型"""
@@ -170,10 +170,13 @@ class YOLODetector:
                 # 获取类别信息
                 class_info = self.class_mapping.get(class_id, self.class_mapping[0])
 
-                # 如果最高置信度也低于 0.4，认为是低置信度检测
+                # 如果最高置信度低于 0.4，认为没有检测到清晰目标
+                # 避免给用户一个随机/不可靠的结果
                 if confidence < 0.4:
-                    print(f"⚠️ 低置信度检测: {confidence:.3f} < 0.4，但仍返回检测类别")
-                    return self._create_low_confidence_result(class_id, confidence, class_info, len(boxes))
+                    print(f"⚠️ 置信度太低: {confidence:.3f} < 0.4，返回未检测到")
+                    return self._create_no_detection_result(
+                        reason=f"AI检测到疑似目标，但置信度仅{confidence:.1%}，不足以给出准确判断"
+                    )
                 print(f"🎯 YOLO检测成功: {class_info['name']} (置信度: {confidence:.3f})")
                 return self._create_real_result(class_id, confidence, class_info, len(boxes))
             else:
@@ -255,23 +258,25 @@ class YOLODetector:
             "risk_assessment": f"风险指数: {risk}% - {'低风险' if risk <= 30 else '中风险' if risk <= 60 else '高风险'}"
         }
 
-    def _create_no_detection_result(self):
+    def _create_no_detection_result(self, reason=None):
         """没有检测到目标时的结果"""
+        default_reason = "YOLOv11未在图像中检测到猫咪排泄物，请上传清晰的猫咪排泄物照片"
+        display_reason = reason or default_reason
         return {
             "detection": {
                 "confidence": 0,
                 "class_id": -1,
                 "class_name": "未检测到排泄物",
-                "features": "YOLOv11未在图像中检测到排泄物",
+                "features": display_reason,
                 "detection_count": 0,
                 "is_real_detection": False
             },
             "health_analysis": {
                 "risk_level": "unknown",
                 "message": "未检测到排泄物",
-                "description": "YOLOv11未在图像中检测到猫咪排泄物，请上传清晰的猫咪排泄物照片",
+                "description": display_reason,
                 "confidence": 0,
-                "recommendation": "请上传更清晰的猫咪排泄物照片",
+                "recommendation": "请上传更清晰的猫咪排泄物照片，确保粪便位于画面中央、光线充足",
                 "detected_class": -1
             },
             "risk_metrics": {
