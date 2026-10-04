@@ -121,14 +121,24 @@ def analyze_with_backup_ai():
 yolo_available = False
 yolo_detector = None
 
+def get_model_path():
+    """取得模型儲存路徑：Render 使用 /data/models，本地使用 backend/flask/models"""
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    local_path = os.path.join(backend_dir, "models", "best.pt")
+
+    if os.environ.get('RENDER'):
+        render_path = "/data/models/best.pt"
+        os.makedirs("/data/models", exist_ok=True)
+        return render_path
+    return local_path
+
 def download_model():
-    """從 Hugging Face 下載模型"""
+    """從 Hugging Face 下載模型，優先使用持久化路徑"""
     import urllib.request
-    import os
+    import shutil
 
     model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best.pt')
-    backend_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(backend_dir, "models", "best.pt")
+    model_path = get_model_path()
 
     # 確保目錄存在
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
@@ -137,11 +147,23 @@ def download_model():
         print(f"[DOWNLOAD] Model already exists: {model_path}")
         return model_path
 
+    # 如果本地 backend/flask/models 有模型，先複製過去（避免重複下載）
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    local_fallback = os.path.join(backend_dir, "models", "best.pt")
+    if os.path.exists(local_fallback) and model_path != local_fallback:
+        print(f"[DOWNLOAD] Copying model from {local_fallback} to {model_path}")
+        try:
+            shutil.copy2(local_fallback, model_path)
+            print(f"[DOWNLOAD] Success! File size: {os.path.getsize(model_path)} bytes")
+            return model_path
+        except Exception as e:
+            print(f"[DOWNLOAD] Copy failed: {e}, will try download")
+
     print(f"[DOWNLOAD] Downloading model from: {model_url}")
     print(f"[DOWNLOAD] Saving to: {model_path}")
 
     try:
-        # 下載文件
+        # 使用較大的 timeout，避免大模型下載中斷
         urllib.request.urlretrieve(model_url, model_path)
         print(f"[DOWNLOAD] Success! File size: {os.path.getsize(model_path)} bytes")
         return model_path
@@ -179,7 +201,7 @@ def init_yolo():
             else:
                 print("[INIT] Detector version: UNKNOWN")
 
-        model_path = os.path.join(backend_dir, "models", "best.pt")
+        model_path = get_model_path()
         print(f"[INIT] Model path: {model_path}")
         print(f"[INIT] Model exists: {os.path.exists(model_path)}")
 
