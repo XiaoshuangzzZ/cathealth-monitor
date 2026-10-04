@@ -1239,12 +1239,12 @@
 .hospital-detail-drawer {
     position: fixed;
     top: 0;
-    right: -350px;
-    width: 350px;
+    right: -300px;
+    width: 300px;
     height: 100%;
     background: white;
     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000;
+    z-index: 10000;
     transition: right 0.3s ease;
     overflow-y: auto;
 }
@@ -1336,7 +1336,7 @@
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 999;
+    z-index: 9999;
     display: none;
 }
 
@@ -1379,6 +1379,60 @@
     }
 }
 
+/* ========== 设置页面样式 ========== */
+.settings-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.settings-row:last-child {
+    border-bottom: none;
+}
+
+.settings-label {
+    font-weight: 500;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-label i {
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+}
+
+.settings-value {
+    color: var(--gray);
+    font-size: 0.95rem;
+}
+
+.settings-action {
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.settings-action:hover {
+    background: #fafafa;
+}
+
+.settings-arrow {
+    color: var(--gray);
+    font-size: 0.85rem;
+}
+
 /* ========== 桌面端頁腳 ========== */
 .app-footer {
     display: none;
@@ -1389,6 +1443,10 @@
     font-size: 0.8rem;
     color: var(--gray);
     flex-shrink: 0;
+}
+
+.app-footer.dashboard-visible {
+    display: block;
 }
 
 .footer-links {
@@ -1426,9 +1484,9 @@
     opacity: 0.8;
 }
 
-@media (min-width: 769px) {
-    .app-footer {
-        display: block;
+@media (max-width: 768px) {
+    .app-footer.dashboard-visible {
+        display: none;
     }
 }
 
@@ -1857,10 +1915,11 @@ function showPage(pageId) {
     // 更新页面标题
     const pageTitles = {
         'dashboard': '控制面板',
-        'analysis': 'AI排泄物分析', 
+        'analysis': 'AI排泄物分析',
         'pets': '猫咪档案',
-        'health-survey': '健康评估问卷', 
-        'hospital': '附近医院'
+        'health-survey': '健康评估问卷',
+        'hospital': '附近医院',
+        'settings': '设置'
     };
     
     const titleElement = document.getElementById('page-title');
@@ -1868,9 +1927,19 @@ function showPage(pageId) {
         titleElement.textContent = pageTitles[pageId];
     }
 
-        
+
 // 更新移动端按钮状态
     updateMobileButtons();
+
+    // 控制頁腳只在控制面板頁面顯示
+    const appFooter = document.querySelector('.app-footer');
+    if (appFooter) {
+        if (pageId === 'dashboard') {
+            appFooter.classList.add('dashboard-visible');
+        } else {
+            appFooter.classList.remove('dashboard-visible');
+        }
+    }
 
     // 页面特定初始化
     if (pageId === 'pets') {
@@ -1893,6 +1962,36 @@ function showPage(pageId) {
             initHospitalMap('hospital-map-container', TENCENT_MAP_KEY);
             renderHospitalList('hospital-list-container');
         }, 100);
+    } else if (pageId === 'settings') {
+        initSettingsPage();
+    }
+}
+
+// 初始化設置頁面
+function initSettingsPage() {
+    const user = getCurrentUser();
+    if (user) {
+        const nameEl = document.getElementById('settings-user-name');
+        const emailEl = document.getElementById('settings-user-email');
+        if (nameEl) nameEl.textContent = user.name || '-';
+        if (emailEl) emailEl.textContent = user.email || '-';
+    }
+
+    const backendEl = document.getElementById('settings-backend-url');
+    if (backendEl) backendEl.textContent = CLOUD_AI_URL;
+
+    // 關閉用戶下拉選單
+    const dropdown = document.getElementById('user-dropdown');
+    if (dropdown) dropdown.classList.remove('active');
+}
+
+// 清除應用緩存
+function clearAppCache() {
+    if (confirm('確定要清除本地緩存嗎？這不會刪除您的賬號數據。')) {
+        localStorage.removeItem('cathealth_remember_login');
+        localStorage.removeItem('cathealth_saved_email');
+        localStorage.removeItem('cathealth_saved_password');
+        alert('✅ 本地緩存已清除');
     }
 }
 
@@ -2516,8 +2615,9 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (!contentArea) return;
         
         const pages = [
-            'dashboard-page', 'analysis-page', 'pets-page', 
-            'health-survey-page', 'hospital-page', 'health-detail-page'
+            'dashboard-page', 'analysis-page', 'pets-page',
+            'health-survey-page', 'hospital-page', 'health-detail-page',
+            'settings-page'
         ];
         
         pages
@@ -2768,9 +2868,11 @@ async function saveHealthSurvey() {
         return;
     }
 
+    console.log('[saveHealthSurvey] 開始保存:', currentSurveyData);
+
     try {
         const recordData = {
-            cat_id: currentSurveyData.petId,
+            cat_id: currentSurveyData.petId ? parseInt(currentSurveyData.petId, 10) : null,
             record_type: 'health_survey',
             result_data: JSON.stringify({
                 overall_score: currentSurveyData.overallHealth,
@@ -2780,17 +2882,28 @@ async function saveHealthSurvey() {
                 recommendations: currentSurveyData.recommendations,
                 timestamp: currentSurveyData.timestamp
             }),
-            risk_level: 100 - currentSurveyData.overallHealth, // 風險等級與健康分數相反
+            risk_level: 100 - currentSurveyData.overallHealth,
             confidence: currentSurveyData.overallHealth / 100,
             notes: `健康評估報告 - 整體健康指數: ${currentSurveyData.overallHealth}%`
         };
 
+        console.log('[saveHealthSurvey] 發送數據:', recordData);
+
         const result = await createHealthRecord(recordData);
+        console.log('[saveHealthSurvey] createHealthRecord 結果:', result);
 
         if (result.success) {
+            // 嘗試更新貓咪體重，但這不是主要功能，失敗不影響報告保存
+            try {
+                if (currentSurveyData.petId && currentSurveyData.weight) {
+                    await updateCatAPI(currentSurveyData.petId, { weight: currentSurveyData.weight });
+                    console.log('[saveHealthSurvey] 體重更新成功');
+                }
+            } catch (weightError) {
+                console.warn('[saveHealthSurvey] 體重更新失敗（不影響報告保存）:', weightError);
+            }
+
             alert('✅ 健康評估報告保存成功！');
-            // 同時更新貓咪體重
-            await updateCatAPI(currentSurveyData.petId, { weight: currentSurveyData.weight });
         } else {
             alert('保存失敗: ' + (result.error || '未知錯誤'));
         }
@@ -2862,7 +2975,7 @@ function generateRecommendations(overall, diet, activity) {
 }
 // 防止页面重复创建
 function ensureNoDuplicatePages() {
-    const pageIds = ['dashboard', 'analysis', 'pets', 'health-survey', 'hospital', 'health-detail'];
+    const pageIds = ['dashboard', 'analysis', 'pets', 'health-survey', 'hospital', 'health-detail', 'settings'];
     
     pageIds.forEach(pageId => {
         const fullId = pageId + '-page';
@@ -2926,6 +3039,9 @@ function ensureNoDuplicatePages() {
                 <a class="nav-item" data-page="hospital">
                     <i class="fas fa-hospital"></i>附近医院
                 </a>
+                <a class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>设置
+                </a>
             </div>
         </nav>
     </div>
@@ -2943,6 +3059,9 @@ function ensureNoDuplicatePages() {
                 <!-- 用户信息会动态更新 -->
                 <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--gray); margin-left: 4px;"></i>
                 <div class="user-dropdown" id="user-dropdown" onclick="event.stopPropagation();">
+                    <a href="#" onclick="showPage('settings'); return false;">
+                        <i class="fas fa-cog"></i> 设置
+                    </a>
                     <a href="#" onclick="logoutUser(); return false;">
                         <i class="fas fa-sign-out-alt"></i> 登出
                     </a>
@@ -3450,6 +3569,74 @@ function ensureNoDuplicatePages() {
             <!-- 结果会动态填充 -->
         </div>
     </div>
+            </div>
+
+            <!-- 设置页面 -->
+            <div id="settings-page" class="page-content">
+                <div class="welcome-banner">
+                    <h2><i class="fas fa-cog"></i> 设置</h2>
+                    <p>管理您的账号与应用偏好</p>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
+                        <i class="fas fa-user"></i> 账号信息
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row">
+                            <div class="settings-label">用户名</div>
+                            <div class="settings-value" id="settings-user-name">-</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label">邮箱</div>
+                            <div class="settings-value" id="settings-user-email">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
+                        <i class="fas fa-shield-alt"></i> 安全
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row settings-action" onclick="alert('修改密码功能即将上线')">
+                            <div class="settings-label"><i class="fas fa-key"></i> 修改密码</div>
+                            <div class="settings-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
+                        <i class="fas fa-broom"></i> 数据
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row settings-action" onclick="clearAppCache()">
+                            <div class="settings-label"><i class="fas fa-trash-alt"></i> 清除本地缓存</div>
+                            <div class="settings-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i> 关于
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row">
+                            <div class="settings-label">应用版本</div>
+                            <div class="settings-value">v1.0.0</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label">AI 模型</div>
+                            <div class="settings-value">YOLOv11</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label">后端服务</div>
+                            <div class="settings-value" id="settings-backend-url">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 添加猫咪模态框 -->
