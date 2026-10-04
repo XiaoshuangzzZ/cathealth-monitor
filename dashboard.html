@@ -2709,12 +2709,6 @@ function initHealthSurvey() {
         });
     }
     
-    // 表单提交处理
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        calculateHealthScore();
-    });
-    
     // 猫咪选择变化时更新体重
     petSelect.addEventListener('change', function() {
         const petId = this.value;
@@ -2725,6 +2719,24 @@ function initHealthSurvey() {
     });
     
     populatePetSelect();
+}
+
+// 提交健康調查問卷（由按鈕 onclick 觸發）
+function submitHealthSurvey() {
+    const form = document.getElementById('health-survey-form');
+    if (!form) {
+        console.error('[submitHealthSurvey] 找不到表單');
+        return;
+    }
+
+    // 檢查表單驗證
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    console.log('[submitHealthSurvey] 表單驗證通過，開始計算');
+    calculateHealthScore();
 }
 
 // 计算健康分数
@@ -3557,7 +3569,7 @@ function ensureNoDuplicatePages() {
             </div>
 
             <div style="text-align: center; margin-top: 30px;">
-                <button type="submit" class="btn btn-primary" style="padding: 15px 30px; font-size: 1.1rem;">
+                <button type="button" class="btn btn-primary" onclick="submitHealthSurvey()" style="padding: 15px 30px; font-size: 1.1rem; position: relative; z-index: 10;">
                     <i class="fas fa-chart-bar"></i>
  生成健康报告
                 </button>
@@ -3840,6 +3852,10 @@ function openHospitalDrawer(hospital) {
     document.getElementById('hospital-detail-drawer').classList.add('open');
     document.getElementById('hospital-drawer-overlay').classList.add('open');
     document.body.style.overflow = 'hidden'; // 防止背景滾動
+
+    // 側邊欄打開時禁止地圖接收觸控事件，避免 WebView 中地圖攔截點擊
+    const mapContainer = document.getElementById('hospital-map-container');
+    if (mapContainer) mapContainer.style.pointerEvents = 'none';
 }
 
 /**
@@ -3849,6 +3865,10 @@ function closeHospitalDrawer() {
     document.getElementById('hospital-detail-drawer').classList.remove('open');
     document.getElementById('hospital-drawer-overlay').classList.remove('open');
     document.body.style.overflow = ''; // 恢復滾動
+
+    // 恢復地圖觸控事件
+    const mapContainer = document.getElementById('hospital-map-container');
+    if (mapContainer) mapContainer.style.pointerEvents = 'auto';
 }
 
 // 監聽 ESC 鍵關閉側邊欄
