@@ -172,10 +172,10 @@ def download_model():
         return None
 
 def init_yolo():
-    """初始化YOLO模型"""
+    """初始化YOLO模型，回傳 (success, error_message)"""
     global yolo_available, yolo_detector
     if yolo_available:
-        return True
+        return True, None
     try:
         # 清除可能的緩存
         import importlib
@@ -209,18 +209,30 @@ def init_yolo():
         if not os.path.exists(model_path):
             print("[INIT] Model not found, trying to download...")
             model_path = download_model()
+            if not model_path:
+                return False, "Model download failed"
 
         if model_path and os.path.exists(model_path):
+            file_size = os.path.getsize(model_path)
+            print(f"[INIT] Model file size: {file_size} bytes")
+
             yolo_detector = YOLODetector(model_path)
             yolo_available = yolo_detector.model is not None
             print(f"[INIT] YOLO loaded: {yolo_available}")
-            print(f"[INIT] Conf threshold: {yolo_detector.conf_threshold}")
-            return yolo_available
+            if yolo_available:
+                print(f"[INIT] Conf threshold: {yolo_detector.conf_threshold}")
+                return True, None
+            else:
+                return False, "YOLODetector model is None after loading"
+        else:
+            return False, f"Model file not found at {model_path}"
     except Exception as e:
-        print(f"[INIT] Error: {e}")
         import traceback
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"[INIT] Error: {error_msg}")
         traceback.print_exc()
-    return False
+        return False, error_msg
+    return False, "Unknown init error"
 
 # ========== 認證裝飾器 ==========
 
@@ -583,11 +595,27 @@ def health():
         "database": "connected"
     })
 
+@app.route('/api/yolo-status', methods=['GET'])
+def yolo_status():
+    """YOLO 模型狀態診斷"""
+    model_path = get_model_path()
+    exists = os.path.exists(model_path)
+    size = os.path.getsize(model_path) if exists else 0
+    return jsonify({
+        "yolo_available": yolo_available,
+        "model_path": model_path,
+        "model_exists": exists,
+        "model_size_bytes": size,
+        "model_size_mb": round(size / 1024 / 1024, 2),
+        "cwd": os.getcwd(),
+        "backend_dir": os.path.dirname(os.path.abspath(__file__))
+    })
+
 @app.route('/api/init', methods=['POST'])
 def api_init():
     """初始化 YOLO"""
-    success = init_yolo()
-    return jsonify({"success": success, "yolo_available": yolo_available})
+    success, error = init_yolo()
+    return jsonify({"success": success, "yolo_available": yolo_available, "error": error})
 
 @app.route('/api/ai/analyze', methods=['POST'])
 @token_required
@@ -609,7 +637,8 @@ def analyze():
         # 確保YOLO已加載
         if not yolo_available:
             print("[API] Initializing YOLO...")
-            init_yolo()
+            init_success, init_error = init_yolo()
+            print(f"[API] init_yolo result: {init_success}, error: {init_error}")
 
         if not yolo_available:
             print("[API] YOLO not available, using backup AI")
@@ -679,7 +708,8 @@ def analyze():
 if __name__ == '__main__':
     # 啟動時預先載入 YOLO 模型，避免第一次請求時等待下載
     print("[SERVER] Preloading YOLO model on startup...")
-    init_yolo()
+    init_success, init_error = init_yolo()
+    print(f"[SERVER] YOLO preload: {init_success}, error: {init_error}")
 
     port = int(os.environ.get('PORT', 10002))
     print(f"[SERVER] Starting on http://127.0.0.1:{port}")
