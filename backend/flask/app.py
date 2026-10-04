@@ -706,10 +706,9 @@ def analyze():
         return jsonify({"success": False, "error": "Internal server error, please try again later"}), 500
 
 if __name__ == '__main__':
-    # 啟動時預先載入 YOLO 模型，避免第一次請求時等待下載
-    print("[SERVER] Preloading YOLO model on startup...")
-    init_success, init_error = init_yolo()
-    print(f"[SERVER] YOLO preload: {init_success}, error: {init_error}")
+    # 不在啟動時預載模型：Render free tier 啟動時間有限，
+    # 模型改在第一次 /api/ai/analyze 請求時按需載入
+    print("[SERVER] YOLO model will be loaded on first request")
 
     port = int(os.environ.get('PORT', 10002))
     print(f"[SERVER] Starting on http://127.0.0.1:{port}")
