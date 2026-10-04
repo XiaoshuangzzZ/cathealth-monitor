@@ -598,18 +598,23 @@ def health():
 @app.route('/api/yolo-status', methods=['GET'])
 def yolo_status():
     """YOLO 模型狀態診斷"""
-    model_path = get_model_path()
-    exists = os.path.exists(model_path)
-    size = os.path.getsize(model_path) if exists else 0
-    return jsonify({
-        "yolo_available": yolo_available,
-        "model_path": model_path,
-        "model_exists": exists,
-        "model_size_bytes": size,
-        "model_size_mb": round(size / 1024 / 1024, 2),
-        "cwd": os.getcwd(),
-        "backend_dir": os.path.dirname(os.path.abspath(__file__))
-    })
+    try:
+        model_path = get_model_path()
+        exists = os.path.exists(model_path)
+        size = os.path.getsize(model_path) if exists else 0
+        return jsonify({
+            "yolo_available": yolo_available,
+            "model_path": model_path,
+            "model_exists": exists,
+            "model_size_bytes": size,
+            "model_size_mb": round(size / 1024 / 1024, 2),
+            "cwd": os.getcwd(),
+            "backend_dir": os.path.dirname(os.path.abspath(__file__))
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/init', methods=['POST'])
 def api_init():
