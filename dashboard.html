@@ -189,6 +189,7 @@
             overflow-y: auto;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             border-right: 1px solid var(--primary-light);
+            z-index: 20000;
         }
 
         .sidebar-header {
@@ -1176,7 +1177,7 @@
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
-        z-index: 1000;
+        z-index: 20000;
         width: 280px;
     }
 
@@ -1482,12 +1483,6 @@
 
 .footer-copyright {
     opacity: 0.8;
-}
-
-@media (max-width: 768px) {
-    .app-footer.dashboard-visible {
-        display: none;
-    }
 }
 
 /* 頁腳彈窗（與現有 .modal 區隔） */
@@ -2750,8 +2745,13 @@ function calculateHealthScore() {
         return;
     }
     
-    const pet = allPets.find(p => p.id === petId);
-    if (!pet) return;
+    const petIdNum = parseInt(petId, 10);
+    const pet = allPets.find(p => p.id === petIdNum || p.id == petId);
+    if (!pet) {
+        console.error('[calculateHealthScore] 找不到貓咪:', petId, allPets);
+        alert('找不到該貓咪資料');
+        return;
+    }
     
     // 评分标准
     const scoreMap = {
