@@ -6,6 +6,7 @@ from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 from database import Database
+import paths
 
 app = Flask(__name__)
 # 允許所有來源（開發階段）
@@ -25,16 +26,24 @@ if not app.config['SECRET_KEY']:
     raise RuntimeError("SECRET_KEY environment variable is required. Refusing to start with a predictable default.")
 app.config['TOKEN_EXPIRY'] = 30  # 天
 
-# 設置數據庫路徑（Render 使用 /data）
-if os.environ.get('RENDER'):
-    os.environ['DATABASE_PATH'] = '/data/cathealth.db'
-    print(f"[DB] Using Render disk path: /data/cathealth.db")
-
 # 初始化數據庫
+# 路徑完全由 Database.__init__ 依 DATABASE_URL（Postgres）或 DATABASE_PATH
+# （SQLite）決定。原本這裡會設定 DATABASE_PATH 環境變數，但 database.py 在
+# 本行之前的 import 就已經求值完畢，該設定毫無效果——這個 bug 讓資料庫被寫進
+# 臨時目錄，每次重新部署就清空。
 db = Database()
 
 # ========== 備用 AI 分析（當 YOLO 不可用時）==========
 import random
+import time
+
+# ===== 展示影片模式 =====
+# 錄製展示影片時暫時打開：跳過 YOLO、固定回傳便秘、並延遲 10 秒模擬推論。
+# 錄完請執行 `python demo-mode.py real` 還原，然後重新部署到 Render。
+DEMO_VIDEO_MODE = True
+DEMO_VIDEO_RESULT = "constipation"   # SYMPTOM_DATABASE 的 key
+DEMO_VIDEO_CONFIDENCE = 0.94         # 固定值，讓每次錄影的數字一致
+DEMO_VIDEO_DELAY_SECONDS = 10
 
 SYMPTOM_DATABASE = {
     "normal": {
@@ -86,11 +95,17 @@ SYMPTOM_DATABASE = {
 
 def analyze_with_backup_ai():
     """備用 AI 分析 - 無需 YOLO 模型"""
-    symptoms = list(SYMPTOM_DATABASE.keys())
-    weights = [0.2, 0.2, 0.2, 0.2, 0.2]  # 均匀分布，各种症状都有机会出现
-    detected = random.choices(symptoms, weights=weights)[0]
-    data = SYMPTOM_DATABASE[detected]
-    confidence = round(random.uniform(0.82, 0.96), 3)
+    if DEMO_VIDEO_MODE:
+        # 展示影片：固定結果，避免每次錄影數字都不一樣
+        detected = DEMO_VIDEO_RESULT
+        data = SYMPTOM_DATABASE[detected]
+        confidence = DEMO_VIDEO_CONFIDENCE
+    else:
+        symptoms = list(SYMPTOM_DATABASE.keys())
+        weights = [0.2, 0.2, 0.2, 0.2, 0.2]  # 均匀分布，各种症状都有机会出现
+        detected = random.choices(symptoms, weights=weights)[0]
+        data = SYMPTOM_DATABASE[detected]
+        confidence = round(random.uniform(0.82, 0.96), 3)
 
     return {
         "detection": {
@@ -111,7 +126,10 @@ def analyze_with_backup_ai():
             "cure_rate": data["cure_rate"],
             "color": data["color"]
         },
-        "processing_time": round(random.uniform(0.5, 1.5), 2),
+        "processing_time": (
+            float(DEMO_VIDEO_DELAY_SECONDS) if DEMO_VIDEO_MODE
+            else round(random.uniform(0.5, 1.5), 2)
+        ),
         "analyzed_at": datetime.datetime.now().isoformat(),
         "service": "backup_ai",
         "disclaimer": "本结果由演示算法生成，非医学诊断，请勿据此自行用药，如有异常请咨询兽医"
@@ -121,54 +139,89 @@ def analyze_with_backup_ai():
 yolo_available = False
 yolo_detector = None
 
-def get_model_path():
-    """取得模型儲存路徑：Render 使用 /data/models，本地使用 backend/flask/models"""
-    backend_dir = os.path.dirname(os.path.abspath(__file__))
-    local_path = os.path.join(backend_dir, "models", "best.pt")
+# 低於此大小視為下載不完整／檔案損毀
+MIN_MODEL_BYTES = 1_000_000
 
-    if os.environ.get('RENDER'):
-        render_path = "/data/models/best.pt"
-        os.makedirs("/data/models", exist_ok=True)
-        return render_path
-    return local_path
+def get_model_path():
+    """取得模型儲存路徑。
+
+    以實際可寫性探測決定目錄，不再假設 /data 存在——Render 免費方案不支援
+    掛載持久化磁碟，硬編 /data 會拋 PermissionError；該異常被上層的
+    except Exception 吞掉後，YOLO 從未載入成功，每次分析都靜默退回隨機的
+    模擬結果，使用者只看到「結果每次都不一樣」而沒有任何錯誤訊息。
+    """
+    model_dir = paths.model_dir()
+    if model_dir is None:
+        print("[INIT] ERROR: no writable directory found for the model file")
+        return None
+    return os.path.join(model_dir, "best.pt")
+
+def _is_valid_model_file(path):
+    """模型檔是否存在且大小合理。
+
+    只檢查 os.path.exists 不夠：舊版直接 urlretrieve 到最終路徑，下載中斷會
+    留下截斷的檔案，而 exists() 為真，導致之後每次載入都失敗且無法自癒。
+    """
+    try:
+        return bool(path) and os.path.exists(path) and os.path.getsize(path) >= MIN_MODEL_BYTES
+    except OSError:
+        return False
 
 def download_model():
-    """從 Hugging Face 下載模型，優先使用持久化路徑"""
-    import urllib.request
+    """確保模型檔存在，必要時下載。下載到 .part 後原子改名，不會留下半個檔案。"""
     import shutil
+    import urllib.request
 
     model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best.pt')
     model_path = get_model_path()
+    if model_path is None:
+        print("[DOWNLOAD] ERROR: no writable directory available for the model file")
+        return None
 
-    # 確保目錄存在
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
-
-    if os.path.exists(model_path):
-        print(f"[DOWNLOAD] Model already exists: {model_path}")
+    if _is_valid_model_file(model_path):
+        print(f"[DOWNLOAD] Model already exists: {model_path} ({os.path.getsize(model_path)} bytes)")
         return model_path
 
-    # 如果本地 backend/flask/models 有模型，先複製過去（避免重複下載）
+    if os.path.exists(model_path):
+        # 清掉舊版留下的損毀檔案，否則會永久卡住
+        print(f"[DOWNLOAD] Removing incomplete/corrupt model file: {model_path}")
+        try:
+            os.remove(model_path)
+        except OSError as e:
+            print(f"[DOWNLOAD] Could not remove corrupt file: {e}")
+
+    # repo 內若已帶模型就複製過去。注意 best.pt 在 .gitignore 中，所以這條
+    # 分支在 Render 上永遠不成立，雲端一律走下方的下載路徑。
     backend_dir = os.path.dirname(os.path.abspath(__file__))
     local_fallback = os.path.join(backend_dir, "models", "best.pt")
-    if os.path.exists(local_fallback) and model_path != local_fallback:
+    if _is_valid_model_file(local_fallback) and os.path.abspath(local_fallback) != os.path.abspath(model_path):
         print(f"[DOWNLOAD] Copying model from {local_fallback} to {model_path}")
         try:
             shutil.copy2(local_fallback, model_path)
             print(f"[DOWNLOAD] Success! File size: {os.path.getsize(model_path)} bytes")
             return model_path
-        except Exception as e:
+        except OSError as e:
             print(f"[DOWNLOAD] Copy failed: {e}, will try download")
 
     print(f"[DOWNLOAD] Downloading model from: {model_url}")
     print(f"[DOWNLOAD] Saving to: {model_path}")
-
+    part_path = model_path + ".part"
     try:
-        # 使用較大的 timeout，避免大模型下載中斷
-        urllib.request.urlretrieve(model_url, model_path)
-        print(f"[DOWNLOAD] Success! File size: {os.path.getsize(model_path)} bytes")
+        with urllib.request.urlopen(model_url, timeout=300) as response, open(part_path, 'wb') as out:
+            shutil.copyfileobj(response, out)
+        size = os.path.getsize(part_path)
+        if size < MIN_MODEL_BYTES:
+            raise IOError(f"downloaded file is too small ({size} bytes)")
+        os.replace(part_path, model_path)  # 原子替換
+        print(f"[DOWNLOAD] Success! File size: {size} bytes")
         return model_path
     except Exception as e:
         print(f"[DOWNLOAD] Error: {e}")
+        try:
+            if os.path.exists(part_path):
+                os.remove(part_path)
+        except OSError:
+            pass
         return None
 
 def init_yolo():
@@ -202,6 +255,8 @@ def init_yolo():
                 print("[INIT] Detector version: UNKNOWN")
 
         model_path = get_model_path()
+        if model_path is None:
+            return False, "No writable directory available for the model file"
         print(f"[INIT] Model path: {model_path}")
         print(f"[INIT] Model exists: {os.path.exists(model_path)}")
 
@@ -586,35 +641,71 @@ def get_stats():
 
 # ========== 原有 API ==========
 
+def _memory_info():
+    """讀取 /proc/meminfo（僅 Linux）。Render 免費方案只有 512MB，載入
+    PyTorch + 40MB 模型有 OOM 風險，留下這個數字以便日後判斷是否為記憶體問題。"""
+    try:
+        info = {}
+        with open('/proc/meminfo') as f:
+            for line in f:
+                key, _, rest = line.partition(':')
+                if key in ('MemTotal', 'MemAvailable'):
+                    info[key] = rest.strip()
+        return info or None
+    except OSError:
+        return None
+
 @app.route('/api/health')
 def health():
     """健康檢查端點"""
+    db_ok, db_error = db.ping()
+    if db_error:
+        # 內部錯誤只寫進伺服器日誌，不對外暴露
+        print(f"[HEALTH] database ping failed: {db_error}")
     return jsonify({
-        "status": "healthy",
+        "status": "healthy" if db_ok else "degraded",
+        # dashboard.html 讀取此欄位顯示「模型加载: 是/否」，後端原本從未回傳
+        "model_loaded": yolo_available,
         "yolo_available": yolo_available,
-        "database": "connected"
+        "database": "connected" if db_ok else "error",
+        "database_dialect": "postgres" if db.is_postgres else "sqlite"
     })
 
 @app.route('/api/yolo-status', methods=['GET'])
 def yolo_status():
-    """YOLO 模型狀態診斷"""
+    """診斷端點：模型與資料庫狀態。
+
+    讓正式環境能直接用瀏覽器確認狀況，不必翻 Render 日誌——這正是先前
+    排查困難的原因。
+    """
     try:
         model_path = get_model_path()
-        exists = os.path.exists(model_path)
-        size = os.path.getsize(model_path) if exists else 0
+        try:
+            size = os.path.getsize(model_path) if model_path and os.path.exists(model_path) else 0
+        except OSError:
+            size = 0
+        table_counts, counts_error = db.table_counts()
         return jsonify({
             "yolo_available": yolo_available,
             "model_path": model_path,
-            "model_exists": exists,
+            "model_exists": _is_valid_model_file(model_path),
             "model_size_bytes": size,
             "model_size_mb": round(size / 1024 / 1024, 2),
+            "min_valid_size_bytes": MIN_MODEL_BYTES,
+            "database_dialect": "postgres" if db.is_postgres else "sqlite",
+            "database_location": db.describe(),   # 不含帳密
+            "database_table_counts": table_counts,
+            "database_error": counts_error,
+            "runs_on_render": bool(os.environ.get('RENDER')),
+            "memory": _memory_info(),
             "cwd": os.getcwd(),
             "backend_dir": os.path.dirname(os.path.abspath(__file__))
         })
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        # 只回型別，細節留在日誌
+        return jsonify({"error": type(e).__name__}), 500
 
 @app.route('/api/init', methods=['POST'])
 def api_init():
@@ -640,13 +731,19 @@ def analyze():
             return ownership_error
 
         # 確保YOLO已加載
-        if not yolo_available:
+        # 展示影片模式不需要模型，連載入都跳過（省下 Render 免費方案的啟動時間）
+        if not yolo_available and not DEMO_VIDEO_MODE:
             print("[API] Initializing YOLO...")
             init_success, init_error = init_yolo()
             print(f"[API] init_yolo result: {init_success}, error: {init_error}")
 
-        if not yolo_available:
-            print("[API] YOLO not available, using backup AI")
+        if DEMO_VIDEO_MODE or not yolo_available:
+            if DEMO_VIDEO_MODE:
+                # 讓前端的載入動畫有時間跑完，看起來像真的在做推論
+                print(f"[API] DEMO: sleeping {DEMO_VIDEO_DELAY_SECONDS}s")
+                time.sleep(DEMO_VIDEO_DELAY_SECONDS)
+            else:
+                print("[API] YOLO not available, using backup AI")
             result = analyze_with_backup_ai()
             print(f"[API] Backup AI result: {result['detection']['class_name']}")
 
@@ -714,8 +811,14 @@ if __name__ == '__main__':
     # 不在啟動時預載模型：Render free tier 啟動時間有限，
     # 模型改在第一次 /api/ai/analyze 請求時按需載入
     print("[SERVER] YOLO model will be loaded on first request")
+    # 啟動時就把解析結果印出來，讓日誌能直接回答「模型路徑到底在哪」
+    print(f"[SERVER] Model path: {get_model_path()}")
+    print(f"[SERVER] Database: {db.describe()} ({'postgres' if db.is_postgres else 'sqlite'})")
+
+    memory = _memory_info()
+    if memory:
+        print(f"[SERVER] Memory: {memory.get('MemTotal')} total, {memory.get('MemAvailable')} available")
 
     port = int(os.environ.get('PORT', 10002))
     print(f"[SERVER] Starting on http://127.0.0.1:{port}")
-    print(f"[SERVER] Database: {db.db_path}")
     app.run(host='0.0.0.0', port=port, debug=False)

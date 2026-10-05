@@ -11,6 +11,25 @@ def init_database():
     """初始化數據庫"""
     print("🚀 開始初始化數據庫...")
 
+    # Postgres 模式下 schema 由 Database() 自動建立。這裡必須在刪除檔案之前
+    # 就返回，否則在雲端情境下可能誤刪資料；而且本腳本有互動式 input()，
+    # 本來就不適合在非互動環境執行。
+    if os.environ.get('DATABASE_URL'):
+        print("ℹ️  偵測到 DATABASE_URL，使用 Postgres 模式")
+        print("ℹ️  schema 由 Database() 自動建立，略過刪檔流程")
+        from database import Database
+        db = Database()
+        print(f"📁 資料庫位置: {db.describe()}")
+        counts, error = db.table_counts()
+        if error:
+            print(f"❌ 無法連線或讀取資料表: {error}")
+            return False
+        print("\n📊 資料表筆數:")
+        for table, count in counts.items():
+            print(f"  - {table}: {count}")
+        print("\n🎉 數據庫準備就緒！")
+        return True
+
     # 刪除舊數據庫（如果存在）
     db_path = os.path.join(os.path.dirname(__file__), 'cathealth.db')
     if os.path.exists(db_path):

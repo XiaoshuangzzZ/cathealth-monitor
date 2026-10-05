@@ -2,10 +2,10 @@
 import sys
 import os
 
-# 設置數據庫路徑（Render 使用 /data）
-if os.environ.get('RENDER'):
-    os.environ['DATABASE_PATH'] = '/data/cathealth.db'
-    print("[RENDER] Setting database path to /data/cathealth.db")
+# 註：原本這裡會在 RENDER 時設定 DATABASE_PATH=/data/cathealth.db，但該路徑
+# 在免費方案上不存在也不可寫，而且 database.py 是在 import 期求值環境變數，
+# 這個設定實際上毫無作用。資料庫路徑現由 Database.__init__ 依 DATABASE_URL
+# 或 DATABASE_PATH 決定。
 
 # 獲取項目根目錄
 root_dir = os.path.dirname(os.path.abspath(__file__))

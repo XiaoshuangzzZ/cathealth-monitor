@@ -17,6 +17,7 @@ fix-all-css.js
 deployment-check.js
 check-deployment.js
 cathealth.db
+cathealth.db.backup*
 best.pt
 api.js
 server-backup-20251020-073208
@@ -49,4 +50,10 @@ android/app/build/
 android/.gradle/
 __pycache__/
 *.pyc
-*.pyo".claude/settings.local.json" 
+*.pyo
+.claude/settings.local.json
+
+# ===== 展示影片備份（錄完影片、還原後可刪）=====
+_demo_backup/
+_preview_alpha.png
+_apk_icons.png

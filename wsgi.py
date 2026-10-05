@@ -2,9 +2,9 @@
 import sys
 import os
 
-# 設置數據庫路徑（Render 使用 /data）
-if os.environ.get('RENDER'):
-    os.environ['DATABASE_PATH'] = '/data/cathealth.db'
+# 註：原本這裡會在 RENDER 時設定 DATABASE_PATH=/data/cathealth.db。該設定
+# 既無效（database.py 於 import 期就求值完畢）也不正確（免費方案無持久化
+# 磁碟）。資料庫路徑現由 Database.__init__ 決定。
 
 # 添加 backend/flask 到 Python 路徑
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend', 'flask'))

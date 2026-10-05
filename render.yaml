@@ -15,7 +15,17 @@ services:
         value: "true"
       - key: PYTHONPATH
         value: /opt/render/project/src
-    disk:
-      name: cathealth-data
-      mountPath: /data
-      sizeGB: 1
+      # Postgres 連線字串（Supabase）。sync: false 表示值不進版控，
+      # 必須在 Render Dashboard → Environment 手動填入。
+      #
+      # 務必使用 Session Pooler 連線字串，不要用 Direct connection：
+      # Direct（db.<ref>.supabase.co:5432）只解析到 IPv6，而 Render 的對外
+      # 連線是 IPv4-only，會直接連不上。
+      # 格式：postgresql://postgres.<project-ref>:<PASSWORD>@aws-0-<region>.pooler.supabase.com:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+
+    # 註：原本此處有一個 disk: 區塊掛載 /data，但 Render 免費方案不支援
+    # 持久化磁碟，該磁碟從未被建立。這導致 os.makedirs("/data/models") 拋出
+    # PermissionError、YOLO 模型從未載入成功，每次分析都靜默退回隨機的模擬
+    # 結果。已移除。模型路徑現由 backend/flask/paths.py 以可寫性探測決定。

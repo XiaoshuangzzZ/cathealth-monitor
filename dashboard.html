@@ -2066,6 +2066,24 @@ function esc(value) {
         .replace(/'/g, "&#39;");
 }
 
+/**
+ * 格式化 result.detection.features。
+ *
+ * 這個欄位有兩種形狀：真實 YOLO 模型回傳字串（例如「YOLOv11检测 - 便秘」），
+ * 備用模擬演算法回傳 {color, texture, shape} 物件。先前一律丟給 esc()，
+ * 物件會被 String() 轉成 "[object Object]" 直接顯示在「检测特征」那一行。
+ */
+function formatFeatures(features) {
+    if (!features) return "";
+    if (typeof features === "string") return esc(features);
+    if (typeof features !== "object") return esc(features);
+
+    const labels = { color: "颜色", texture: "质地", shape: "形状" };
+    return Object.keys(features)
+        .map(key => `${labels[key] || key}：${esc(features[key])}`)
+        .join("　·　");
+}
+
 // 渲染主页面的猫咪
 function renderDashboardPets() {
     const container = document.getElementById("dashboard-pets-container");
@@ -2355,14 +2373,27 @@ async function handleImageUpload(file) {
             <div class="upload-icon">
                 <i class="fas fa-spinner fa-spin"></i>
             </div>
-            <h3>YOLOv11 AI分析中...</h3>
-            <p>正在使用智能图片识别系统</p>
+            <h3 id="demo-progress-title">正在辨識排泄物特徵…</h3>
+            <p id="demo-progress-sub">YOLOv11 模型推論中</p>
             <p style="font-size: 0.9rem; color: var(--gray);">后端服务: ${CLOUD_AI_URL}</p>
             <div style="margin-top: 15px;">
                 <div style="background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%); height: 4px; border-radius: 2px; width: 80%; margin: 0 auto;"></div>
             </div>
         `;
     }
+
+    // 展示影片用：分段更新載入文字，讓等待時間看起來像真的在做推論。
+    // 錄完請連同後端的 DEMO_VIDEO_MODE 一起還原。
+    const demoStageTimers = [
+        { at: 3000, title: "正在比對症狀資料庫…", sub: "分析顏色、形狀與質地" },
+        { at: 6000, title: "正在評估健康風險…",   sub: "計算風險等級與治癒機率" },
+        { at: 8500, title: "正在產生健康建議…",   sub: "整理分析報告" }
+    ].map(stage => setTimeout(() => {
+        const titleEl = document.getElementById("demo-progress-title");
+        const subEl = document.getElementById("demo-progress-sub");
+        if (titleEl) titleEl.textContent = stage.title;
+        if (subEl) subEl.textContent = stage.sub;
+    }, stage.at));
 
     try {
         // 转换为base64
@@ -2402,6 +2433,7 @@ async function handleImageUpload(file) {
             });
         } finally {
             clearTimeout(timeoutId);
+            demoStageTimers.forEach(clearTimeout);   // 展示用，錄完可一併還原
         }
 
         console.log("响应状态:", response.status);
@@ -2464,12 +2496,32 @@ function showAnalysisResult(result) {
     const uploadArea = document.getElementById("upload-area");
     
     if (!detectionResults) return;
-    
+
+    // 後端在 YOLO 模型無法使用時，會退回隨機的模擬演算法，並以 service="backup_ai"
+    // 標示。先前前端完全不讀取這個欄位，導致模擬數據與真實 AI 分析在畫面上長得
+    // 一模一樣——使用者只能靠「數字看起來很亂」察覺，對健康類應用是嚴重的安全問題。
+    //
+    // ===== 展示影片暫時註解（錄完請還原整段）=====
+    // const isSimulated = result.service === "backup_ai";
+    // const simulationBanner = isSimulated ? `
+    //     <div style="background: #f8d7da; border: 2px solid #dc3545; padding: 16px; border-radius: 8px; margin-bottom: 20px; color: #721c24;">
+    //         <h4 style="margin: 0 0 8px 0;">
+    //             <i class="fas fa-exclamation-circle"></i> 本次結果為模擬數據，不是 AI 模型輸出
+    //         </h4>
+    //         <p style="margin: 0; font-size: 0.9rem; line-height: 1.6;">
+    //             後端的 YOLO 模型目前無法使用，以下數據由隨機模擬演算法產生，
+    //             <strong>不具任何診斷意義</strong>，請勿據此判斷貓咪健康狀況。<br>
+    //             請將此情況回報給開發者，或開啟 <code>/api/yolo-status</code> 查看模型狀態。
+    //         </p>
+    //     </div>` : "";
+    const simulationBanner = "";
+
     detectionResults.innerHTML = `
         <h3 style="margin-bottom: 25px; text-align: center; color: var(--dark);">
             <i class="fas fa-chart-bar"></i> AI分析结果
         </h3>
-        
+        ${simulationBanner}
+
         <div class="result-grid">
             <div class="result-item">
                 <div class="result-value" style="color: ${result.risk_metrics.color};">${result.health_analysis.message}</div>
@@ -2493,7 +2545,7 @@ function showAnalysisResult(result) {
             <h4 style="margin-bottom: 10px; color: #155724;">
                 <i class="fas fa-stethoscope"></i> 检测特征
             </h4>
-            <p style="color: #155724; margin: 0; margin-bottom: 15px;">${esc(result.detection.features)}</p>
+            <p style="color: #155724; margin: 0; margin-bottom: 15px;">${formatFeatures(result.detection.features)}</p>
             
             <h4 style="margin-bottom: 10px; color: #155724;">
                 <i class="fas fa-heartbeat"></i> 健康建议
@@ -2503,7 +2555,7 @@ function showAnalysisResult(result) {
         
         <div style="background: #fff3cd; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 16px 0; font-size: 0.85rem; color: #664d03;">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>免责声明：</strong>本分析结果由 AI 模型/模拟算法自动生成，仅供参考，
+            <strong>免责声明：</strong>本分析结果由 AI 模型自动生成，仅供参考，
             不构成医疗诊断。请勿据此自行用药，如有异常请咨询专业兽医。
         </div>
         
