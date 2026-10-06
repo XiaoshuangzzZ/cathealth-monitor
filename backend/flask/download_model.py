@@ -40,7 +40,21 @@ MODEL_NAME = "best.onnx"
 
 def _is_valid(path: Path) -> bool:
     try:
-        return path.exists() and path.stat().st_size >= MIN_MODEL_BYTES
+        return path.exists() and path.stat().st_size >= MIN_MODEL_BYTES and not _is_zip(path)
+    except OSError:
+        return False
+
+
+def _is_zip(path: Path) -> bool:
+    """PyTorch 的 .pt 是 zip 容器，開頭是 PK\\x03\\x04；ONNX 是 protobuf，不會是。
+
+    曾經發生過：Render 上的 MODEL_URL 環境變數仍指向舊的 best.pt，於是 40MB 的
+    PyTorch 檔被存成 best.onnx，大小檢查照樣過關，但 onnxruntime 載不起來，
+    症狀是 yolo_available: false 而看不出原因。
+    """
+    try:
+        with open(path, "rb") as f:
+            return f.read(4).startswith(b"PK\x03\x04")
     except OSError:
         return False
 
@@ -48,6 +62,17 @@ def _is_valid(path: Path) -> bool:
 def main() -> int:
     url = os.environ.get("MODEL_URL", DEFAULT_MODEL_URL)
     dest = MODEL_DIR / MODEL_NAME
+
+    # MODEL_URL 是覆寫用的，但推論現在只吃 ONNX。若這個環境變數還指著舊的
+    # best.pt（Render 上確實發生過），就會把 PyTorch 檔存成 best.onnx，
+    # 大小檢查過關但載不起來。寧可忽略它並大聲警告。
+    if url is not DEFAULT_MODEL_URL and not url.endswith(".onnx"):
+        print("!" * 66)
+        print(f"[BUILD-MODEL] WARNING: MODEL_URL 指向非 ONNX 檔案，已忽略：{url}")
+        print(f"[BUILD-MODEL] WARNING: 改用預設值：{DEFAULT_MODEL_URL}")
+        print("[BUILD-MODEL] WARNING: 請到 Render Dashboard → Environment 刪掉 MODEL_URL。")
+        print("!" * 66)
+        url = DEFAULT_MODEL_URL
 
     print(f"[BUILD-MODEL] target : {dest}")
     print(f"[BUILD-MODEL] source : {url}")
@@ -75,6 +100,8 @@ def main() -> int:
         size = part.stat().st_size
         if size < MIN_MODEL_BYTES:
             raise IOError(f"downloaded file is too small ({size} bytes)")
+        if _is_zip(part):
+            raise IOError("下載到的其實是 PyTorch checkpoint（zip），不是 ONNX 模型")
 
         os.replace(part, dest)  # 原子替換
         print(f"[BUILD-MODEL] success: {size} bytes ({size / 1024 / 1024:.1f} MB)")

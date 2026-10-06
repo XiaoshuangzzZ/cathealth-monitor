@@ -55,13 +55,22 @@ def get_model_path():
     return os.path.join(model_dir, "best.onnx")
 
 def _is_valid_model_file(path):
-    """模型檔是否存在且大小合理。
+    """模型檔是否存在、大小合理，且真的是 ONNX（而不是被誤命的 PyTorch 檔）。
 
     只檢查 os.path.exists 不夠：舊版直接 urlretrieve 到最終路徑，下載中斷會
     留下截斷的檔案，而 exists() 為真，導致之後每次載入都失敗且無法自癒。
+
+    大小檢查也不夠：Render 上的 MODEL_URL 曾指向舊的 best.pt，於是 40MB 的
+    PyTorch zip 被存成 best.onnx，大小過關但 onnxruntime 載不起來。
+    PyTorch 的 .pt 是 zip 容器（開頭 PK\\x03\\x04），ONNX 是 protobuf，不會是。
     """
     try:
-        return bool(path) and os.path.exists(path) and os.path.getsize(path) >= MIN_MODEL_BYTES
+        if not path or not os.path.exists(path):
+            return False
+        if os.path.getsize(path) < MIN_MODEL_BYTES:
+            return False
+        with open(path, "rb") as f:
+            return not f.read(4).startswith(b"PK\x03\x04")
     except OSError:
         return False
 
