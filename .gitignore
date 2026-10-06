@@ -57,3 +57,7 @@ __pycache__/
 _demo_backup/
 _preview_alpha.png
 _apk_icons.png
+
+# ===== 執行期除錯產物 =====
+# detector.py 每次分析都會把收到的圖片寫到 CWD，不該進版控
+debug_last_input.jpg

@@ -4,7 +4,12 @@ services:
     runtime: python
     plan: free
     rootDir: backend/flask
-    buildCommand: pip install -r requirements.txt
+    # 除了安裝依賴，也先把 40MB 的 YOLO 模型抓下來。best.pt 不在 repo 裡
+    # （.gitignore），而免費方案沒有持久化磁碟，所以每次部署都是全新的容器。
+    # 在 build 階段下載，start 之後模型就已經在了，第一次分析不必再等 ~34 秒，
+    # 也不會出現「模型不存在 → 分析功能不能用」的空窗。
+    # 下載失敗不會讓 build 失敗（見 download_model.py 的說明）。
+    buildCommand: pip install -r requirements.txt && python download_model.py
     startCommand: python app.py
     envVars:
       - key: PYTHON_VERSION
