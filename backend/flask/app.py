@@ -35,15 +35,6 @@ db = Database()
 
 # ========== 備用 AI 分析（當 YOLO 不可用時）==========
 import random
-import time
-
-# ===== 展示影片模式 =====
-# 錄製展示影片時暫時打開：跳過 YOLO、固定回傳便秘、並延遲 10 秒模擬推論。
-# 錄完請執行 `python demo-mode.py real` 還原，然後重新部署到 Render。
-DEMO_VIDEO_MODE = True
-DEMO_VIDEO_RESULT = "constipation"   # SYMPTOM_DATABASE 的 key
-DEMO_VIDEO_CONFIDENCE = 0.94         # 固定值，讓每次錄影的數字一致
-DEMO_VIDEO_DELAY_SECONDS = 10
 
 SYMPTOM_DATABASE = {
     "normal": {
@@ -95,17 +86,11 @@ SYMPTOM_DATABASE = {
 
 def analyze_with_backup_ai():
     """備用 AI 分析 - 無需 YOLO 模型"""
-    if DEMO_VIDEO_MODE:
-        # 展示影片：固定結果，避免每次錄影數字都不一樣
-        detected = DEMO_VIDEO_RESULT
-        data = SYMPTOM_DATABASE[detected]
-        confidence = DEMO_VIDEO_CONFIDENCE
-    else:
-        symptoms = list(SYMPTOM_DATABASE.keys())
-        weights = [0.2, 0.2, 0.2, 0.2, 0.2]  # 均匀分布，各种症状都有机会出现
-        detected = random.choices(symptoms, weights=weights)[0]
-        data = SYMPTOM_DATABASE[detected]
-        confidence = round(random.uniform(0.82, 0.96), 3)
+    symptoms = list(SYMPTOM_DATABASE.keys())
+    weights = [0.2, 0.2, 0.2, 0.2, 0.2]  # 均匀分布，各种症状都有机会出现
+    detected = random.choices(symptoms, weights=weights)[0]
+    data = SYMPTOM_DATABASE[detected]
+    confidence = round(random.uniform(0.82, 0.96), 3)
 
     return {
         "detection": {
@@ -126,10 +111,7 @@ def analyze_with_backup_ai():
             "cure_rate": data["cure_rate"],
             "color": data["color"]
         },
-        "processing_time": (
-            float(DEMO_VIDEO_DELAY_SECONDS) if DEMO_VIDEO_MODE
-            else round(random.uniform(0.5, 1.5), 2)
-        ),
+        "processing_time": round(random.uniform(0.5, 1.5), 2),
         "analyzed_at": datetime.datetime.now().isoformat(),
         "service": "backup_ai",
         "disclaimer": "本结果由演示算法生成，非医学诊断，请勿据此自行用药，如有异常请咨询兽医"
@@ -731,19 +713,13 @@ def analyze():
             return ownership_error
 
         # 確保YOLO已加載
-        # 展示影片模式不需要模型，連載入都跳過（省下 Render 免費方案的啟動時間）
-        if not yolo_available and not DEMO_VIDEO_MODE:
+        if not yolo_available:
             print("[API] Initializing YOLO...")
             init_success, init_error = init_yolo()
             print(f"[API] init_yolo result: {init_success}, error: {init_error}")
 
-        if DEMO_VIDEO_MODE or not yolo_available:
-            if DEMO_VIDEO_MODE:
-                # 讓前端的載入動畫有時間跑完，看起來像真的在做推論
-                print(f"[API] DEMO: sleeping {DEMO_VIDEO_DELAY_SECONDS}s")
-                time.sleep(DEMO_VIDEO_DELAY_SECONDS)
-            else:
-                print("[API] YOLO not available, using backup AI")
+        if not yolo_available:
+            print("[API] YOLO not available, using backup AI")
             result = analyze_with_backup_ai()
             print(f"[API] Backup AI result: {result['detection']['class_name']}")
 
