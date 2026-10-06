@@ -4,11 +4,11 @@
 
 為什麼需要這一步
 ----------------
-`best.pt` 在 .gitignore 裡（40MB），所以它不在 repo 中；而 Render 免費方案
+`best.onnx` 在 .gitignore 裡（77MB），所以它不在 repo 中；而 Render 免費方案
 沒有持久化磁碟，每次部署的容器都是全新的。原本只能等第一次
 `/api/ai/analyze` 請求才觸發下載，造成兩個問題：
 
-  1. 部署後第一次分析要多等 ~34 秒（40MB 下載 + 載入 PyTorch）。
+  1. 部署後第一次分析要多等下載時間。
   2. 如果那次下載失敗（網路、HuggingFace 暫時異常），模型就不存在，
      分析功能直接不能用。
 
@@ -31,10 +31,11 @@ import urllib.request
 from pathlib import Path
 
 MIN_MODEL_BYTES = 1_000_000
-DEFAULT_MODEL_URL = "https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best.pt"
+DEFAULT_MODEL_URL = "https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best_dynamic.onnx"
 
 # 與 app.py 的 paths.model_dir() 在 Render 上的結果一致
 MODEL_DIR = Path(__file__).resolve().parent / "models"
+MODEL_NAME = "best.onnx"
 
 
 def _is_valid(path: Path) -> bool:
@@ -46,7 +47,7 @@ def _is_valid(path: Path) -> bool:
 
 def main() -> int:
     url = os.environ.get("MODEL_URL", DEFAULT_MODEL_URL)
-    dest = MODEL_DIR / "best.pt"
+    dest = MODEL_DIR / MODEL_NAME
 
     print(f"[BUILD-MODEL] target : {dest}")
     print(f"[BUILD-MODEL] source : {url}")
@@ -56,7 +57,7 @@ def main() -> int:
         return 0
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    part = dest.with_suffix(".pt.part")
+    part = dest.with_suffix(".onnx.part")
 
     # 清掉先前的殘檔，否則截斷的檔案會讓後續每次載入都失敗
     for stale in (part, dest):

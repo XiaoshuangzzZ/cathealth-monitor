@@ -52,7 +52,7 @@ def get_model_path():
     if model_dir is None:
         print("[INIT] ERROR: no writable directory found for the model file")
         return None
-    return os.path.join(model_dir, "best.pt")
+    return os.path.join(model_dir, "best.onnx")
 
 def _is_valid_model_file(path):
     """模型檔是否存在且大小合理。
@@ -70,7 +70,7 @@ def download_model():
     import shutil
     import urllib.request
 
-    model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best.pt')
+    model_url = os.environ.get('MODEL_URL', 'https://huggingface.co/lingshuang/cathealth-yolov11/resolve/main/best_dynamic.onnx')
     model_path = get_model_path()
     if model_path is None:
         print("[DOWNLOAD] ERROR: no writable directory available for the model file")
@@ -88,10 +88,10 @@ def download_model():
         except OSError as e:
             print(f"[DOWNLOAD] Could not remove corrupt file: {e}")
 
-    # repo 內若已帶模型就複製過去。注意 best.pt 在 .gitignore 中，所以這條
+    # repo 內若已帶模型就複製過去。注意 *.onnx 在 .gitignore 中，所以這條
     # 分支在 Render 上永遠不成立，雲端一律走下方的下載路徑。
     backend_dir = os.path.dirname(os.path.abspath(__file__))
-    local_fallback = os.path.join(backend_dir, "models", "best.pt")
+    local_fallback = os.path.join(backend_dir, "models", "best.onnx")
     if _is_valid_model_file(local_fallback) and os.path.abspath(local_fallback) != os.path.abspath(model_path):
         print(f"[DOWNLOAD] Copying model from {local_fallback} to {model_path}")
         try:
@@ -142,15 +142,14 @@ def init_yolo():
         import yolo.detector as detector_module
         print(f"[INIT] Loaded detector from: {detector_module.__file__}")
 
-        # Verify it's the correct file
+        # 確認載入的是 ONNX Runtime 版本。先前用 PyTorch 時，推論一次峰值要吃
+        # 576MB，在 Render 的 512MB 容器上會被 OOM kill。
         with open(detector_module.__file__, 'r', encoding='utf-8') as f:
             content = f.read()
-            if 'self.model(image, conf=self.conf_threshold' in content:
-                print("[INIT] Detector version: FIXED (PIL Image passed to model)")
-            elif 'np.array(image)' in content:
-                print("[INIT] Detector version: BUGGY (numpy array passed)")
+            if 'onnxruntime' in content:
+                print("[INIT] Detector backend: ONNX Runtime")
             else:
-                print("[INIT] Detector version: UNKNOWN")
+                print("[INIT] Detector backend: UNKNOWN (預期是 ONNX Runtime)")
 
         model_path = get_model_path()
         if model_path is None:

@@ -1,15 +1,75 @@
+"""
+YOLO 糞便特徵偵測器 —— ONNX Runtime 版本。
+
+為什麼從 PyTorch 換成 ONNX
+--------------------------
+原本用 ultralytics + PyTorch 推論。實測（Windows，本機）：
+
+    import torch + 載入模型        311 MB
+    推論一次峰值                   576 MB
+
+Render 的容器記憶體上限是 512 MB，所以模型載入得起來，但一推論就被
+OOM kill、服務重啟——使用者看到的是「請求超時」，因為請求永遠沒回應。
+
+改用 onnxruntime 之後：
+
+    建立 session                   140 MB
+    推論一次峰值                   242 MB
+    推論耗時                       0.34s（PyTorch 是 1.3s）
+
+而且 requirements 不再需要 torch / ultralytics / 5GB 的 CUDA 函式庫，
+build 從 5.9GB 降到約 80MB。
+
+關於 rect 前處理（重要）
+------------------------
+ultralytics 對 PyTorch 模型預設用「矩形推論」：長邊縮到 imgsz，短邊向上取到
+stride 的倍數，幾乎不補灰邊。ONNX 若用固定 640x640 就只能補成正方形，
+而補出來的灰邊會讓信心分數大幅下降：
+
+    test.jpg  矩形(640x448) → 便秘 0.754
+    test.jpg  正方形(640x640，補 96px 灰邊) → 便秘 0.448   ← 差 0.3！
+
+0.448 已經貼近 0.4 的門檻，很容易誤判成「未檢測到」。所以匯出的 ONNX 是
+**動態尺寸**，這裡也照樣做矩形前處理，結果才能與原本的 PyTorch 路徑一致
+（實測 0.739 vs 0.754）。
+"""
+
+import base64
+import io
+import os
+import sys
+
 import numpy as np
 from PIL import Image
-import io
-import base64
-from ultralytics import YOLO
-import os
+
+# 本模組的日誌含有 emoji。Windows 主控台預設是 cp950，印 emoji 會拋
+# UnicodeEncodeError；這裡的 print 散落在 load_model() 內，一旦拋出就會被
+# 外層 except 接住並把 self.model 設成 None，結果是「模型載入失敗」卻看不出
+# 真正原因。
+#
+# 原本 ultralytics 在 import 時會幫忙把 stdout 轉成 UTF-8，改用 onnxruntime
+# 之後那個副作用没了，必須自己處理——否則在非 UTF-8 locale 的環境下載入
+# 模型會直接失敗。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+
+try:
+    import onnxruntime as ort
+except ImportError:  # 讓錯誤訊息清楚一點，而不是 import 期就炸掉
+    ort = None
+
 
 class YOLODetector:
     def __init__(self, model_path):
         self.model_path = model_path
-        self.model = None
-        self.load_model()
+        self.model = None          # onnxruntime InferenceSession
+        self.input_name = None
+        self.num_classes = None
+        self.imgsz = 640
+        self.stride = 32
 
         # 类别映射（根据模型实际类别）- 包含详细医疗建议
         # 模型实际输出：0=dehydrated_poop, 1=diarrhoea, 2=normal_poop, 3=not_shit, 4=soft_poop
@@ -92,24 +152,59 @@ class YOLODetector:
             }
         }
         self.conf_threshold = 0.25  # 过滤低置信度噪声，避免随机结果
+        self.iou_threshold = 0.5
+
+        self.load_model()
+
+    # ========== 模型載入 ==========
 
     def load_model(self):
-        """加载YOLO模型"""
+        """建立 ONNX Runtime session。"""
         try:
-            print("🚀 加载YOLO模型...")
-            print(f"   模型路径: {self.model_path}")
+            print("🚀 載入 ONNX 模型...")
+            print(f"   模型路徑: {self.model_path}")
 
-            if os.path.exists(self.model_path):
-                file_size = os.path.getsize(self.model_path)
-                print(f"   模型文件存在，大小: {file_size/1024/1024:.1f} MB")
-                self.model = YOLO(self.model_path)
-                print("✅ YOLO模型加载成功！")
-            else:
-                print(f"❌ 模型文件不存在: {self.model_path}")
+            if ort is None:
+                print("❌ 未安裝 onnxruntime")
                 self.model = None
+                return
+
+            if not os.path.exists(self.model_path):
+                print(f"❌ 模型檔案不存在: {self.model_path}")
+                self.model = None
+                return
+
+            size = os.path.getsize(self.model_path)
+            print(f"   模型檔案存在，大小: {size/1024/1024:.1f} MB")
+
+            opts = ort.SessionOptions()
+            # 單執行緒：容器 CPU 配額有限，開多執行緒只是增加記憶體與排程開銷
+            opts.intra_op_num_threads = int(os.environ.get("ORT_THREADS", "1"))
+            opts.inter_op_num_threads = 1
+            opts.log_severity_level = 3
+            # 預設關閉 CPU memory arena。實測（本機，載入模型後連續推論）：
+            #     arena 開啟  常駐 344 MB   每次 0.37-0.39s
+            #     arena 關閉  常駐 169 MB   每次 0.37-0.40s
+            # 省下 175MB 而速度幾乎無損，對 512MB 的容器上限來說非常值得。
+            # 設 ORT_MEM_ARENA=1 可改回預設行為。
+            if os.environ.get("ORT_MEM_ARENA") != "1":
+                opts.enable_cpu_mem_arena = False
+
+            self.model = ort.InferenceSession(
+                self.model_path, opts, providers=["CPUExecutionProvider"]
+            )
+
+            inp = self.model.get_inputs()[0]
+            self.input_name = inp.name
+            if isinstance(inp.shape[2], int):
+                self.imgsz = inp.shape[2]
+            out = self.model.get_outputs()[0]
+            self.num_classes = out.shape[1] - 4
+
+            print(f"✅ ONNX 模型載入成功！(imgsz={self.imgsz}, classes={self.num_classes})")
 
         except Exception as e:
-            print(f"❌ 模型加载失败: {e}")
+            print(f"❌ 模型載入失敗: {type(e).__name__}: {e}")
             self.model = None
 
     def base64_to_image(self, base64_string):
@@ -123,6 +218,90 @@ class YOLODetector:
         except Exception as e:
             print(f"❌ 图像解码失败: {e}")
             return None
+
+    # ========== 前處理 / 後處理 ==========
+
+    def _rect_shape(self, image):
+        """矩形推論的目標尺寸：長邊縮到 imgsz，短邊向上取到 stride 的倍數。
+
+        這對應 ultralytics 的 LetterBox(auto=True)。補得越少，信心分數越接近
+        訓練時的分佈——正方形補滿灰邊會讓信心掉約 0.3。
+        """
+        iw, ih = image.size
+        r = min(self.imgsz / iw, self.imgsz / ih)
+        nw = min(self.imgsz, int(np.ceil(iw * r / self.stride) * self.stride))
+        nh = min(self.imgsz, int(np.ceil(ih * r / self.stride) * self.stride))
+        return nh, nw
+
+    def _letterbox(self, image, target, color=114):
+        """等比縮放 + 置中灰邊填充，回傳 NCHW float32 (0-1)。"""
+        h, w = target
+        iw, ih = image.size
+        r = min(w / iw, h / ih)
+        nw, nh = round(iw * r), round(ih * r)
+        resized = image.resize((nw, nh), Image.BILINEAR)
+        canvas = Image.new("RGB", (w, h), (color, color, color))
+        canvas.paste(resized, ((w - nw) // 2, (h - nh) // 2))
+
+        a = np.asarray(canvas, dtype=np.float32) / 255.0
+        return np.ascontiguousarray(np.transpose(a, (2, 0, 1))[None, ...])
+
+    @staticmethod
+    def _nms(boxes, scores, iou_thres):
+        """純 numpy 的 NMS（原本由 torchvision 提供）。"""
+        order = scores.argsort()[::-1]
+        keep = []
+        while order.size > 0:
+            i = order[0]
+            keep.append(i)
+            if order.size == 1:
+                break
+            xx1 = np.maximum(boxes[i, 0], boxes[order[1:], 0])
+            yy1 = np.maximum(boxes[i, 1], boxes[order[1:], 1])
+            xx2 = np.minimum(boxes[i, 2], boxes[order[1:], 2])
+            yy2 = np.minimum(boxes[i, 3], boxes[order[1:], 3])
+            w = np.maximum(0.0, xx2 - xx1)
+            h = np.maximum(0.0, yy2 - yy1)
+            inter = w * h
+            area_i = (boxes[i, 2] - boxes[i, 0]) * (boxes[i, 3] - boxes[i, 1])
+            area_o = ((boxes[order[1:], 2] - boxes[order[1:], 0]) *
+                      (boxes[order[1:], 3] - boxes[order[1:], 1]))
+            iou = inter / (area_i + area_o - inter + 1e-9)
+            order = order[1:][iou <= iou_thres]
+        return keep
+
+    def _run_inference(self, image):
+        """執行推論，回傳 (class_ids, confidences)，依信心由高到低排序。"""
+        target = self._rect_shape(image)
+        x = self._letterbox(image, target)
+
+        out = self.model.run(None, {self.input_name: x})[0]
+        pred = out[0]
+        # (4+nc, anchors) -> (anchors, 4+nc)
+        if pred.shape[0] < pred.shape[1]:
+            pred = pred.T
+
+        boxes_xywh = pred[:, :4]
+        scores_all = pred[:, 4:]
+        cls_ids = scores_all.argmax(axis=1)
+        confs = scores_all[np.arange(len(cls_ids)), cls_ids]
+
+        # 先用較低的門檻篩掉絕大多數 anchor，再做 NMS
+        keep = confs > 0.01
+        boxes_xywh, confs, cls_ids = boxes_xywh[keep], confs[keep], cls_ids[keep]
+
+        if len(confs) == 0:
+            return np.array([]), np.array([])
+
+        cx, cy, w, h = boxes_xywh.T
+        boxes = np.stack([cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2], axis=1)
+        idx = self._nms(boxes, confs, self.iou_threshold)
+
+        order = np.argsort(-confs[idx])
+        idx = np.asarray(idx)[order]
+        return cls_ids[idx], confs[idx]
+
+    # ========== 主要檢測函式 ==========
 
     def detect_stool_features(self, image):
         """主要的检测函数 - 仅使用真实YOLO检测"""
@@ -141,53 +320,46 @@ class YOLODetector:
             print(f"   保存调试图片失败: {e}")
 
         if self.model is None:
-            print("❌ YOLO模型未加载")
+            print("❌ 模型未加载")
             return self._create_error_result("Model not loaded")
 
         try:
-            print("   运行YOLO推理...")
-            # YOLO可以直接接收PIL图像，不需要转换为numpy
-            print(f"   输入图像: {image.size}, mode: {image.mode}")
+            target = self._rect_shape(image)
+            print(f"   矩形前處理: {image.size} -> {target[1]}x{target[0]}（不補灰邊）")
+            print("   运行ONNX推理...")
 
-            results = self.model(image, conf=self.conf_threshold, iou=0.5, imgsz=640, augment=False, verbose=True)
-            print(f"   YOLO推理完成，结果数量: {len(results)}")
+            class_ids, confidences = self._run_inference(image)
 
-            if len(results) > 0 and results[0].boxes is not None and len(results[0].boxes) > 0:
-                boxes = results[0].boxes
-                confidences = boxes.conf.cpu().numpy()
-                class_ids = boxes.cls.cpu().numpy()
-
-                print(f"   YOLO检测到 {len(boxes)} 个目标")
-                print(f"   所有检测结果:")
-                for i, (conf, cls_id) in enumerate(zip(confidences, class_ids)):
-                    cls_name = self.class_mapping.get(int(cls_id), {"name": f"类别{int(cls_id)}"})["name"]
-                    print(f"     [{i}] 类别: {cls_name} (ID:{int(cls_id)}), 置信度: {conf:.3f}")
-
-                max_idx = np.argmax(confidences)
-                class_id = int(class_ids[max_idx])
-                confidence = float(confidences[max_idx])
-
-                # 获取类别信息
-                class_info = self.class_mapping.get(class_id, self.class_mapping[0])
-
-                # 如果最高置信度低于 0.4，认为没有检测到清晰目标
-                # 避免给用户一个随机/不可靠的结果
-                if confidence < 0.4:
-                    print(f"⚠️ 置信度太低: {confidence:.3f} < 0.4，返回未检测到")
-                    return self._create_no_detection_result(
-                        reason=f"AI检测到疑似目标，但置信度仅{confidence:.1%}，不足以给出准确判断"
-                    )
-                print(f"🎯 YOLO检测成功: {class_info['name']} (置信度: {confidence:.3f})")
-                return self._create_real_result(class_id, confidence, class_info, len(boxes))
-            else:
-                print("⚠️ YOLO未检测到任何目标")
-                print(f"   调试信息: results长度={len(results)}, boxes={results[0].boxes if len(results)>0 else 'N/A'}")
+            if len(confidences) == 0:
+                print("⚠️ 未检测到任何目标")
                 return self._create_no_detection_result()
+
+            print(f"   YOLO检测到 {len(confidences)} 个目标")
+            for i, (conf, cls_id) in enumerate(zip(confidences, class_ids)):
+                cls_name = self.class_mapping.get(int(cls_id), {"name": f"类别{int(cls_id)}"})["name"]
+                print(f"     [{i}] 类别: {cls_name} (ID:{int(cls_id)}), 置信度: {conf:.3f}")
+
+            class_id = int(class_ids[0])
+            confidence = float(confidences[0])
+            good_boxes = int((confidences > self.conf_threshold).sum())
+
+            class_info = self.class_mapping.get(class_id, self.class_mapping[0])
+
+            # 低于 0.4 认为没有检测到清晰目标，避免给用户一个随机/不可靠的结果
+            if confidence < 0.4:
+                print(f"⚠️ 置信度太低: {confidence:.3f} < 0.4，返回未检测到")
+                return self._create_no_detection_result(
+                    reason=f"AI检测到疑似目标，但置信度仅{confidence:.1%}，不足以给出准确判断"
+                )
+            print(f"🎯 YOLO检测成功: {class_info['name']} (置信度: {confidence:.3f})")
+            return self._create_real_result(class_id, confidence, class_info, good_boxes)
 
         except Exception as e:
             print(f"❌ YOLO检测异常: {e}")
             traceback.print_exc()
             return self._create_error_result(str(e))
+
+    # ========== 結果建構（與原本一致）==========
 
     def _create_real_result(self, class_id, confidence, class_info, detection_count):
         """创建真实的YOLO检测结果"""
@@ -222,7 +394,7 @@ class YOLODetector:
             "analysis_info": {
                 "type": "YOLOv11真实检测",
                 "model": os.path.basename(self.model_path),
-                "detection_method": "YOLOv11物体检测",
+                "detection_method": "YOLOv11 ONNX Runtime 物体检测",
                 "is_real_ai": True
             }
         }

@@ -1,11 +1,16 @@
-ultralytics>=8.3.0
+# 推論改用 ONNX Runtime。
+#
+# 原本是 ultralytics + torch + torchvision + opencv-python，那會在 build 時
+# 拉進約 5.9GB 的 CUDA 函式庫（nvidia-cublas/cudnn/nccl…），而且推論一次
+# 峰值記憶體達 576MB——超過 Render 容器 512MB 的上限，會被 OOM kill。
+#
+# 換成 onnxruntime 後：峰值 242MB、推論快 4 倍、build 從 5.9GB 降到約 80MB。
+# 模型檔（best.onnx）由 download_model.py 在 build 階段取得。
 flask>=2.3.0
 flask-cors>=4.0.0
-opencv-python>=4.8.0
 pillow>=10.0.0
 numpy>=1.24.0
-torch>=2.0.0
-torchvision>=0.15.0
+onnxruntime>=1.17.0
 pyjwt>=2.8.0
 werkzeug>=3.0.0
 gunicorn>=21.0.0

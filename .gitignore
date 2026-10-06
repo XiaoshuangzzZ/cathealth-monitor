@@ -61,3 +61,7 @@ _apk_icons.png
 # ===== 執行期除錯產物 =====
 # detector.py 每次分析都會把收到的圖片寫到 CWD，不該進版控
 debug_last_input.jpg
+
+# 模型檔（77MB，放 HuggingFace，由 download_model.py 取得）
+*.onnx
+*.pt
