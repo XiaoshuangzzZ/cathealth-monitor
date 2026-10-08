@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Hidden Realm mark">
+  <rect width="256" height="256" rx="56" fill="#010101"/>
+  <circle cx="128" cy="128" r="74" fill="none" stroke="#f7fffb" stroke-opacity=".9" stroke-width="2"/>
+  <circle cx="128" cy="128" r="41" fill="none" stroke="#b9f3e8" stroke-opacity=".75" stroke-width="2"/>
+  <circle cx="128" cy="128" r="10" fill="#eafff9"/>
+  <path d="M128 32v30M128 194v30M32 128h30M194 128h30" stroke="#eafff9" stroke-opacity=".55" stroke-width="2"/>
+</svg>

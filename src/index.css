@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    background: #010101;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    color: #fff;
+    background: #010101;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    font: inherit;
+  }
+}
+
+.font-garamond {
+  font-family: Garamond, Baskerville, "Times New Roman", serif;
+}
+
+.hero-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(148, 204, 194, 0.09), transparent 22%),
+    radial-gradient(ellipse at 50% 100%, rgba(45, 90, 98, 0.12), transparent 48%),
+    #010101;
+}
+
+.ambient {
+  position: absolute;
+  z-index: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ambient-lens {
+  top: 14%;
+  left: 50%;
+  width: min(74vw, 880px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(194, 255, 242, 0.11) 0%, rgba(110, 193, 184, 0.045) 34%, transparent 69%);
+  filter: blur(4px);
+  animation: lens-breathe 14s ease-in-out infinite;
+}
+
+.ambient-tide {
+  right: -18vw;
+  bottom: -34vh;
+  width: min(68vw, 820px);
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(86, 151, 164, 0.12), transparent 66%);
+  filter: blur(22px);
+  animation: tide-drift 20s ease-in-out infinite alternate;
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.26;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.33) 0.45px, transparent 0.65px);
+  background-size: 5px 5px;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 78%, transparent);
+}
+
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transition: background 260ms ease, box-shadow 260ms ease, transform 160ms ease;
+}
+
+.liquid-glass::before {
+  position: absolute;
+  inset: 0;
+  padding: 1.4px;
+  content: '';
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.liquid-glass:hover {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.liquid-glass:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 4px;
+}
+
+.liquid-glass:active {
+  transform: scale(0.98);
+}
+
+.realm-awake .ambient-lens {
+  animation-duration: 6s;
+  opacity: 1.35;
+}
+
+.realm-awake .ambient-tide {
+  opacity: 1.2;
+}
+
+@keyframes lens-breathe {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.92);
+    opacity: 0.58;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.07);
+    opacity: 1;
+  }
+}
+
+@keyframes tide-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.92);
+  }
+  to {
+    transform: translate3d(-12vw, -8vh, 0) scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
