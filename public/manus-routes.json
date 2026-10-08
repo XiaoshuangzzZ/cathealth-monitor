@@ -1,1 +1,1 @@
-{"routes":[{"path":"/","title":"Hidden Realm"}]}
+{"routes":[{"path":"/","title":"Hidden Realm"},{"path":"/auth.html","title":"CatHealth Sign In"},{"path":"/dashboard.html","title":"CatHealth Dashboard"}]}

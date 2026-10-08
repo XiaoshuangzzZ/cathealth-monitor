@@ -1,21 +1,37 @@
 {
-  "name": "cathealth-monitor",
+  "name": "cathealth-app",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "CatHealth Monitor with a cinematic Hidden Realm introduction",
+  "main": "index.html",
   "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node copy-app-assets.cjs",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "build:www": "npm run build && node build-www.js",
+    "sync:android": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "build:apk": "node build-apk.js",
+    "build:apk:unix": "node build-apk.js"
   },
+  "keywords": ["cat", "health", "pet", "monitor"],
+  "author": "CatHealth Team",
+  "license": "MIT",
   "dependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/camera": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/geolocation": "^5.0.0",
+    "@capacitor/splash-screen": "^5.0.0",
+    "@capacitor/status-bar": "^5.0.0",
     "framer-motion": "^12.23.12",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

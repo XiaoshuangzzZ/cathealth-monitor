@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
 import { StaggeredFade } from './components/StaggeredFade'
 
 const entranceTransition = {
@@ -8,10 +7,8 @@ const entranceTransition = {
 }
 
 function App() {
-  const [isExperienceActive, setIsExperienceActive] = useState(false)
-
   return (
-    <main className={`hero-shell ${isExperienceActive ? 'realm-awake' : ''}`}>
+    <main className="hero-shell">
       <div className="ambient ambient-lens" aria-hidden="true" />
       <div className="ambient ambient-tide" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
@@ -44,20 +41,15 @@ function App() {
             <span>revealed by lens and curiosity.</span>
           </motion.p>
 
-          <motion.button
-            type="button"
+          <motion.a
+            href="auth.html"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...entranceTransition, delay: 2.0 }}
             className="liquid-glass rounded-full px-7 py-3.5 font-sans text-[0.68rem] font-medium uppercase tracking-[0.18em] text-white/90 sm:px-10 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
-            onClick={() => setIsExperienceActive(true)}
-            aria-describedby="experience-status"
           >
             <span className="relative z-10">Begin the Experience</span>
-          </motion.button>
-          <span id="experience-status" className="sr-only" aria-live="polite">
-            {isExperienceActive ? 'The hidden realm is now in focus.' : ''}
-          </span>
+          </motion.a>
         </div>
       </section>
     </main>

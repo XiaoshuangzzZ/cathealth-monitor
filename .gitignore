@@ -1,4 +1,66 @@
-node_modules/
+yolov8n.pt
+yolo11n.pt
+yolo_service.py.backup
+yolo_service.py
+yolo_detection_code.js
+yolo_config.yaml
+test-api.js
+simple-server.py
+server.js.backup.20251020_002743
+server.js.backup-20251020_001435
+server.js.backup
+netlify-deploy.zip
+# manifest.json
+hello.js
+health-analysis.html.backup
+fix-all-css.js
+deployment-check.js
+check-deployment.js
+cathealth.db
+cathealth.db.backup*
+best.pt
+api.js
+server-backup-20251020-073208
+scripts
+node_modules
+deploy-to-netlify
+deploy-backend
+backup_20251021_075216
+.env
+# .yaml  # Allow render.yaml
+.pt
+.db
+.vercel
+# .github  # Allow GitHub Actions workflows
+.gitattributes
+# ===== 安全：敏感文件禁止提交 =====
+android/*.keystore
+android/key.properties
+android/local.properties
+.env*
+!.env.example
+# ===== 生成物 / 拷贝 =====
+www/
+qr_codes/
+android/app/src/main/assets/www/
+android/app/src/main/assets/public/
+android/app/build/
+android/.gradle/
+__pycache__/
+*.pyc
+*.pyo
+.claude/settings.local.json
+# ===== 展示影片備份（錄完影片、還原後可刪）=====
+_demo_backup/
+_preview_alpha.png
+_apk_icons.png
+# ===== 執行期除錯產物 =====
+# detector.py 每次分析都會把收到的圖片寫到 CWD，不該進版控
+debug_last_input.jpg
+# 模型檔（77MB，放 HuggingFace，由 download_model.py 取得）
+*.onnx
+*.pt
+# ===== 前端构建生成物 =====
 dist/
 *.tsbuildinfo
 .DS_Store

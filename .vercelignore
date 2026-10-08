@@ -1,0 +1,8 @@
+backend/
+*.py
+__pycache__/
+*.pt
+*.db
+node_modules/
+.claude/
+.git/

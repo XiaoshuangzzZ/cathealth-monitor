@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: cathealth-backend
+    runtime: python
+    plan: free
+    rootDir: backend/flask
+    # 除了安裝依賴，也先把 40MB 的 YOLO 模型抓下來。best.pt 不在 repo 裡
+    # （.gitignore），而免費方案沒有持久化磁碟，所以每次部署都是全新的容器。
+    # 在 build 階段下載，start 之後模型就已經在了，第一次分析不必再等 ~34 秒，
+    # 也不會出現「模型不存在 → 分析功能不能用」的空窗。
+    # 下載失敗不會讓 build 失敗（見 download_model.py 的說明）。
+    buildCommand: pip install -r requirements.txt && python download_model.py
+    startCommand: python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RENDER
+        value: "true"
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      # Postgres 連線字串（Supabase）。sync: false 表示值不進版控，
+      # 必須在 Render Dashboard → Environment 手動填入。
+      #
+      # 務必使用 Session Pooler 連線字串，不要用 Direct connection：
+      # Direct（db.<ref>.supabase.co:5432）只解析到 IPv6，而 Render 的對外
+      # 連線是 IPv4-only，會直接連不上。
+      # 格式：postgresql://postgres.<project-ref>:<PASSWORD>@aws-0-<region>.pooler.supabase.com:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+
+    # 註：原本此處有一個 disk: 區塊掛載 /data，但 Render 免費方案不支援
+    # 持久化磁碟，該磁碟從未被建立。這導致 os.makedirs("/data/models") 拋出
+    # PermissionError、YOLO 模型從未載入成功，每次分析都靜默退回隨機的模擬
+    # 結果。已移除。模型路徑現由 backend/flask/paths.py 以可寫性探測決定。
