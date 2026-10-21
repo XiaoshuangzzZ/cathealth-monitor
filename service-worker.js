@@ -1,10 +1,19 @@
-﻿const CACHE_NAME = 'cathealth-v1.0.0';
+﻿const CACHE_NAME = 'cathealth-v1.3.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/dashboard.html',
   '/auth.js',
   '/hospital-map.js',
+  '/i18n.js',
+  '/ai-chat.js',
+  '/pet-float.js',
+  '/pet/D.png',
+  '/pet/Dsleep.png',
+  '/pet/Dsleep-avatar.png',
+  '/pet/D1.wav',
+  '/pet/D2.wav',
+  '/pet/D3.wav',
   '/manifest.json',
   '/service-worker.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'

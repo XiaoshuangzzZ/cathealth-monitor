@@ -1,7 +1,10 @@
 import os
 import sys
+import json
 import jwt
 import datetime
+import urllib.error
+import urllib.request
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
@@ -234,7 +237,7 @@ def home():
         "service": "CatHealth API",
         "status": "running",
         "version": "1.0",
-        "endpoints": ["/api/health", "/api/auth/login", "/api/auth/register", "/api/ai/analyze"]
+        "endpoints": ["/api/health", "/api/auth/login", "/api/auth/register", "/api/ai/analyze", "/api/ai/chat"]
     })
 
 @app.route('/<path:filename>')
@@ -704,6 +707,240 @@ def analyze():
         traceback.print_exc()
         # 安全修复：不向客户端暴露内部错误细节
         return jsonify({"success": False, "error": "Internal server error, please try again later"}), 500
+
+
+# ========== AI 健康助手 ==========
+#
+# 原本微信小程序用雲函數呼叫 DeepSeek。搬到 Flask 後改由後端代理，
+# 避免把 API Key 暴露在前端；沒有設定 DEEPSEEK_API_KEY 時，改用內建的
+# 貓咪健康知識庫回覆，功能不會因為缺少金鑰而整個不能用。
+
+DEEPSEEK_API_URL = os.environ.get(
+    "DEEPSEEK_API_URL", "https://api.deepseek.com/chat/completions"
+).strip()
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat").strip()
+
+_CHAT_LANGUAGE_NAMES = {
+    "zh-CN": "Simplified Chinese",
+    "zh-TW": "Traditional Chinese",
+    "en": "English",
+    "pt": "Portuguese",
+}
+
+_CHAT_SYSTEM_PROMPT = """You are "CatHealth Assistant", a warm, knowledgeable cat health assistant inside the CatHealth Monitor app.
+
+Your scope:
+- Cat nutrition, hydration, litter box habits (stool and urine), weight, behaviour, grooming and preventive care.
+- Helping users understand the app's AI waste-analysis results and when to see a vet.
+
+How to answer:
+- Be friendly, concise and practical. Use plain language and avoid unnecessary jargon.
+- Use at most one or two emojis per reply.
+- Ask a short follow-up question when important details are missing (cat's age, symptoms, duration, appetite, water intake).
+- Never diagnose, prescribe medication or give drug dosages.
+- For severe, sudden or persistent symptoms (difficulty breathing, seizures, inability to urinate, blood in urine or stool, repeated vomiting, extreme lethargy), tell the user to seek veterinary care immediately.
+- Make clear that your advice does not replace a veterinarian, but do not repeat a long disclaimer in every sentence.
+- Do not use markdown headings or tables. Short paragraphs and simple bullet points are fine.
+- Reply in {language}. If the user writes in a different language, reply in the user's language.
+
+Title: CatHealth Assistant."""
+
+_LOCAL_CHAT = {
+    "zh-CN": {
+        "emergency": "这可能是急症：呼吸困难、抽搐、无法排尿、尿血/便血、持续呕吐或精神极度萎靡都需要立即就医，请不要等待或自行用药。",
+        "vomit": "偶尔呕吐可能是毛球或吃太快。请记录呕吐次数和内容，并确保有清水。如果反复呕吐、呕吐物带血、精神差、超过24小时不吃东西，请尽快看兽医。",
+        "diarrhea": "请先注意补水和记录排便次数。若腹泻超过24–48小时、带血，或幼猫同时呕吐、精神差，请就医。",
+        "constipation": "可以先增加饮水和湿粮。若超过2–3天没有排便、频繁蹲猫砂盆或痛苦叫唤，请就医。",
+        "water": "猫咪天生不爱喝水。可以多放几个水碗、使用流动饮水机、喂湿粮，并留意每天尿量和排尿次数。",
+        "diet": "换粮建议用7–10天逐步过渡；定时定量，避免人类食物，并确保新鲜饮水。若猫咪超过24小时完全不吃东西，请咨询兽医。",
+        "weight": "定期称重并观察体态。若短期明显变胖或变瘦，建议让兽医评估。",
+        "urine": "如果猫咪频繁蹲猫砂盆却尿不出来、叫唤或尿中带血，尤其是公猫，请立即就医。",
+        "prevention": "定期疫苗、驱虫、体检和口腔护理都很重要；具体计划请按兽医建议。",
+        "behavior": "突然的行为改变可能与压力、环境或身体不适有关。先排除疾病，再考虑环境丰富化。",
+        "analysis": "你可以上传猫咪排泄物照片使用 AI 分析。照片越清晰、光线越充足，结果越可靠；分析结果仅供参考，不能替代兽医诊断。",
+        "default": "我是 CatHealth 健康小助手。你可以问我猫咪的饮食、饮水、排泄、体重、行为或 AI 分析结果。请告诉我猫咪的年龄、症状和持续时间，我会给出更有针对性的建议。",
+        "disclaimer": "以上是一般健康资讯，不能替代兽医诊断。",
+    },
+    "zh-TW": {
+        "emergency": "這可能是急症：呼吸困難、抽搐、無法排尿、尿血／便血、持續嘔吐或精神極度萎靡都需要立即就醫，請不要等待或自行用藥。",
+        "vomit": "偶爾嘔吐可能是毛球或吃太快。請記錄嘔吐次數和內容，並確保有清水。如果反覆嘔吐、嘔吐物帶血、精神差、超過24小時不吃東西，請盡快看獸醫。",
+        "diarrhea": "請先注意補水和記錄排便次數。若腹瀉超過24–48小時、帶血，或幼貓同時嘔吐、精神差，請就醫。",
+        "constipation": "可以先增加飲水和濕糧。若超過2–3天沒有排便、頻繁蹲貓砂盆或痛苦叫喚，請就醫。",
+        "water": "貓咪天生不愛喝水。可以多放幾個水碗、使用流動飲水機、餵濕糧，並留意每天尿量和排尿次數。",
+        "diet": "換糧建議用7–10天逐步過渡；定時定量，避免人類食物，並確保新鮮飲水。若貓咪超過24小時完全不吃東西，請諮詢獸醫。",
+        "weight": "定期稱重並觀察體態。若短期明顯變胖或變瘦，建議讓獸醫評估。",
+        "urine": "如果貓咪頻繁蹲貓砂盆卻尿不出來、叫喚或尿中帶血，尤其是公貓，請立即就醫。",
+        "prevention": "定期疫苗、驅蟲、體檢和口腔護理都很重要；具體計劃請按獸醫建議。",
+        "behavior": "突然的行為改變可能與壓力、環境或身體不適有關。先排除疾病，再考慮環境豐富化。",
+        "analysis": "你可以上傳貓咪排泄物照片使用 AI 分析。照片越清晰、光線越充足，結果越可靠；分析結果僅供參考，不能替代獸醫診斷。",
+        "default": "我是 CatHealth 健康小助手。你可以問我貓咪的飲食、飲水、排泄、體重、行為或 AI 分析結果。請告訴我貓咪的年齡、症狀和持續時間，我會給出更有針對性的建議。",
+        "disclaimer": "以上是一般健康資訊，不能替代獸醫診斷。",
+    },
+    "en": {
+        "emergency": "This may be an emergency. Difficulty breathing, seizures, inability to urinate, blood in urine or stool, repeated vomiting, or extreme lethargy all need immediate veterinary care. Do not wait or self-medicate.",
+        "vomit": "Occasional vomiting can be caused by hairballs or eating too fast. Note how often it happens and what is vomited, and keep fresh water available. See a vet promptly if vomiting repeats, contains blood, is accompanied by lethargy, or your cat has not eaten for 24 hours.",
+        "diarrhea": "Keep your cat hydrated and note how often it passes stool. See a vet if diarrhoea lasts more than 24–48 hours, contains blood, or a kitten also vomits or is lethargic.",
+        "constipation": "Try increasing water intake and wet food. See a vet if there has been no stool for 2–3 days, your cat keeps straining in the litter box, or seems to be in pain.",
+        "water": "Cats are naturally poor drinkers. Use several water bowls, a pet fountain, and wet food, and keep an eye on daily urine output and how often your cat urinates.",
+        "diet": "Transition food gradually over 7–10 days, feed measured meals at set times, avoid human food, and always provide fresh water. If your cat has not eaten at all for 24 hours, consult a vet.",
+        "weight": "Weigh your cat regularly and check its body condition. Ask a vet to assess any sudden weight gain or loss.",
+        "urine": "If your cat frequently visits the litter box but cannot urinate, cries out, or has blood in its urine — especially a male cat — seek veterinary care immediately.",
+        "prevention": "Regular vaccination, deworming, check-ups and dental care are important. Follow your vet's recommended schedule.",
+        "behavior": "A sudden change in behaviour can be caused by stress, the environment, or illness. Rule out medical causes first, then consider enrichment.",
+        "analysis": "You can upload a photo of your cat's waste to the AI analysis feature. Clearer photos in good light give more reliable results. The result is for reference only and cannot replace a vet's diagnosis.",
+        "default": "I am the CatHealth Assistant. Ask me about your cat's diet, water intake, litter box, weight, behaviour, or the AI analysis results. Tell me your cat's age, symptoms and how long they have lasted for more specific guidance.",
+        "disclaimer": "This is general information and does not replace veterinary advice.",
+    },
+    "pt": {
+        "emergency": "Isto pode ser uma emergência. Dificuldade em respirar, convulsões, incapacidade de urinar, sangue na urina ou nas fezes, vómitos repetidos ou apatia extrema exigem cuidados veterinários imediatos. Não espere nem se automedique.",
+        "vomit": "Vómitos ocasionais podem dever-se a bolas de pelo ou a comer demasiado depressa. Registe a frequência e o conteúdo e mantenha água fresca disponível. Consulte um veterinário se os vómitos se repetirem, tiverem sangue, houver apatia ou o gato não comer há 24 horas.",
+        "diarrhea": "Mantenha o gato hidratado e registe a frequência das fezes. Consulte um veterinário se a diarreia durar mais de 24–48 horas, tiver sangue, ou se for um gatinho com vómitos ou apatia.",
+        "constipation": "Aumente a ingestão de água e a comida húmida. Consulte um veterinário se não houver fezes durante 2–3 dias, se o gato fizer força na areia com frequência ou parecer ter dor.",
+        "water": "Os gatos bebem naturalmente pouca água. Use várias tigelas, uma fonte de água e comida húmida, e vigie o volume e a frequência da urina.",
+        "diet": "Faça a transição de comida ao longo de 7–10 dias, dê refeições medidas a horas fixas, evite comida humana e garanta água fresca. Se o gato não comer nada durante 24 horas, consulte um veterinário.",
+        "weight": "Pese o gato regularmente e avalie a condição corporal. Peça a um veterinário para avaliar aumentos ou perdas de peso súbitos.",
+        "urine": "Se o gato vai muitas vezes à areia mas não consegue urinar, mia, ou tem sangue na urina — especialmente um macho — procure ajuda veterinária imediatamente.",
+        "prevention": "A vacinação regular, a desparasitação, as consultas e os cuidados dentários são importantes. Siga o plano recomendado pelo veterinário.",
+        "behavior": "Uma mudança súbita de comportamento pode dever-se a stress, ao ambiente ou a doença. Primeiro exclua causas médicas e depois considere enriquecimento ambiental.",
+        "analysis": "Pode carregar uma foto dos dejetos do gato na análise com IA. Fotos mais nítidas e bem iluminadas dão resultados mais fiáveis. O resultado é apenas indicativo e não substitui o diagnóstico veterinário.",
+        "default": "Sou o Assistente CatHealth. Pergunte-me sobre a alimentação, hidratação, areia, peso, comportamento do seu gato ou sobre os resultados da análise com IA. Diga-me a idade, os sintomas e há quanto tempo duram para obter orientações mais específicas.",
+        "disclaimer": "Esta é informação geral e não substitui a consulta veterinária.",
+    },
+}
+
+_EMERGENCY_WORDS = [
+    "呼吸困难", "呼吸困難", "抽搐", "无法排尿", "無法排尿", "尿不出来", "尿不出來",
+    "尿血", "血尿", "便血", "吐血", "中毒", "昏迷",
+    "difficulty breathing", "can't breathe", "cannot breathe", "seizure", "convulsion",
+    "inability to urinate", "cannot urinate", "can't urinate", "blood in urine",
+    "blood in stool", "poison", "unconscious",
+    "dificuldade em respirar", "convuls", "sangue na urina", "sangue nas fezes",
+    "veneno", "inconsciente",
+]
+
+_CHAT_TOPIC_WORDS = [
+    ("urine", ["尿", "urina", "urin"]),
+    ("vomit", ["呕吐", "嘔吐", "吐了", "反胃", "吐", "vomit", "throw up", "vomiting", "ómito", "omito", "vómito", "nausea", "enjoo"]),
+    ("diarrhea", ["腹泻", "腹瀉", "拉稀", "拉肚子", "软便", "軟便", "diarrh", "diarreia", "diarrhea", "fezes moles"]),
+    ("constipation", ["便秘", "没拉", "沒拉", "不拉", "排便", "拉不出", "拉屎", "大便干", "大便硬", "屎", "constipa", "prisão de ventre", "prisao de ventre", "straining", "no stool", "no poop", "litter box", "fezes duras"]),
+    ("water", ["喝水", "饮水", "飲水", "喝", "water", "drink", "beber", "bebe", "água", "agua"]),
+    ("diet", ["吃", "饮食", "飲食", "食欲", "食慾", "猫粮", "貓糧", "food", "diet", "appetite", "comida", "alimenta", "apetite"]),
+    ("weight", ["体重", "體重", "weight", "peso", "肥", "瘦", "fat", "thin", "gordo", "magro"]),
+    ("prevention", ["疫苗", "驱虫", "驅蟲", "打针", "打針", "vaccin", "vacina", "vermifug", "check-up", "checkup"]),
+    ("behavior", ["行为", "行為", "抓", "咬", "哈气", "躲", "behavior", "behaviour", "scratch", "bite", "hide", "comportamento", "arranha", "morde", "esconde"]),
+    ("analysis", ["分析", "照片", "结果", "結果", "analysis", "analyse", "análise", "foto", "report", "relatório", "relatorio"]),
+]
+
+
+def _local_cat_health_reply(text, language):
+    """沒有 DeepSeek 金鑰時的貓咪健康知識庫回覆。"""
+    lang = language if language in _LOCAL_CHAT else "zh-CN"
+    replies = _LOCAL_CHAT[lang]
+    lowered = (text or "").lower()
+
+    topic = "default"
+    if any(word in lowered for word in _EMERGENCY_WORDS):
+        topic = "emergency"
+    else:
+        for candidate, words in _CHAT_TOPIC_WORDS:
+            if any(word in lowered for word in words):
+                topic = candidate
+                break
+
+    return replies[topic] + "\n\n" + replies["disclaimer"]
+
+
+def _call_deepseek(messages, timeout=45):
+    """呼叫 DeepSeek 的 OpenAI 相容端點。"""
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+
+    payload = {
+        "model": DEEPSEEK_MODEL or "deepseek-chat",
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 1200,
+        "stream": False,
+    }
+    request_obj = urllib.request.Request(
+        DEEPSEEK_API_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + api_key,
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request_obj, timeout=timeout) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", errors="ignore")[:500]
+        print(f"[CHAT] DeepSeek HTTP {error.code}: {detail}")
+        raise
+
+    parsed = json.loads(raw)
+    choices = parsed.get("choices") or []
+    if not choices:
+        raise RuntimeError("DeepSeek returned no choices")
+    content = ((choices[0].get("message") or {}).get("content") or "").strip()
+    if not content:
+        raise RuntimeError("DeepSeek returned empty content")
+    return content
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+@token_required
+def ai_chat():
+    """貓咪健康 AI 助手。前端只傳對話與介面語言，系統提示詞留在後端。"""
+    data = request.get_json(silent=True) or {}
+    messages = data.get('messages')
+    language = data.get('language') if data.get('language') in _CHAT_LANGUAGE_NAMES else 'zh-CN'
+
+    if not isinstance(messages, list) or not messages:
+        return jsonify({'success': False, 'error': 'Invalid request'}), 400
+
+    clean_messages = []
+    for item in messages[-14:]:
+        if not isinstance(item, dict):
+            continue
+        role = item.get('role')
+        content = item.get('content')
+        if role not in ('user', 'assistant') or not isinstance(content, str):
+            continue
+        content = content.strip()
+        if content:
+            clean_messages.append({'role': role, 'content': content[:4000]})
+
+    if not clean_messages or clean_messages[-1]['role'] != 'user':
+        return jsonify({'success': False, 'error': 'Invalid request'}), 400
+
+    total_chars = sum(len(message['content']) for message in clean_messages)
+    if total_chars > 16000:
+        return jsonify({'success': False, 'error': 'Conversation is too long'}), 400
+
+    last_user_message = clean_messages[-1]['content']
+    language_name = _CHAT_LANGUAGE_NAMES[language]
+    system_prompt = _CHAT_SYSTEM_PROMPT.replace('{language}', language_name)
+    prompt_messages = [{'role': 'system', 'content': system_prompt}] + clean_messages
+
+    api_key = os.environ.get('DEEPSEEK_API_KEY', '').strip()
+    if not api_key:
+        reply = _local_cat_health_reply(last_user_message, language)
+        return jsonify({'success': True, 'data': reply, 'provider': 'local'})
+
+    try:
+        reply = _call_deepseek(prompt_messages)
+        return jsonify({'success': True, 'data': reply, 'provider': 'deepseek'})
+    except Exception as error:
+        import traceback
+        print(f"[CHAT] DeepSeek call failed: {type(error).__name__}: {error}")
+        traceback.print_exc()
+        # 上游失敗時仍提供本地健康知識，避免整個助手不能用。
+        reply = _local_cat_health_reply(last_user_message, language)
+        return jsonify({'success': True, 'data': reply, 'provider': 'local_fallback'})
 
 if __name__ == '__main__':
     # 不在啟動時預載模型：Render free tier 啟動時間有限，

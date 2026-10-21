@@ -11,12 +11,16 @@ const filesToCopy = [
   'dashboard.html',
   'auth.js',
   'hospital-map.js',
+  'i18n.js',
+  'ai-chat.js',
+  'pet-float.js',
   'manifest.json',
   'service-worker.js'
 ];
 
 const dirsToCopy = [
-  'images/icons'
+  'images/icons',
+  'pet'
 ];
 
 const wwwDir = path.join(__dirname, 'www');
