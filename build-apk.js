@@ -70,7 +70,7 @@ function run(cmd, options = {}) {
 function main() {
   const isWin = process.platform === 'win32';
 
-  // 1. 先建置 Vite 介紹頁與靜態資源，再輸出 www
+  // 1. 複製靜態前端資源到 www
   run('npm run build:www');
 
   // 2. Capacitor sync

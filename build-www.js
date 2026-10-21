@@ -1,24 +1,84 @@
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
 
 /**
- * 将已构建的动态介绍页与既有 CatHealth 静态页面复制到 www/，供 Capacitor 打包 Android APK 使用。
- * 使用方式：npm run build:www
+ * 將頂層前端檔案複製到 www/，供 Capacitor 打包 Android APK 使用
+ * 用法：node build-www.js
  */
-const root = __dirname
-const sourceDir = path.join(root, 'dist')
-const targetDir = path.join(root, 'www')
 
-if (!fs.existsSync(path.join(sourceDir, 'index.html'))) {
-  throw new Error('缺少 dist/index.html，请先运行 npm run build。')
+const filesToCopy = [
+  'index.html',
+  'auth.html',
+  'dashboard.html',
+  'auth.js',
+  'hospital-map.js',
+  'i18n.js',
+  'ai-chat.js',
+  'pet-float.js',
+  'manifest.json',
+  'service-worker.js'
+];
+
+const dirsToCopy = [
+  'images/icons',
+  'pet'
+];
+
+const wwwDir = path.join(__dirname, 'www');
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created: ${dir}`);
+  }
 }
 
-if (fs.existsSync(targetDir)) {
-  fs.rmSync(targetDir, { recursive: true, force: true })
-  console.log('Cleaned: www/')
+function copyFile(src, dest) {
+  fs.copyFileSync(src, dest);
+  console.log(`Copied: ${src} -> ${dest}`);
 }
 
-fs.cpSync(sourceDir, targetDir, { recursive: true })
-console.log('Copied built landing page and CatHealth static assets to www/')
-console.log('下一步请执行: npx cap sync android')
-console.log('然后进入 android 目录运行: ./gradlew assembleDebug')
+function copyDir(src, dest) {
+  ensureDir(dest);
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      copyFile(srcPath, destPath);
+    }
+  }
+}
+
+// 清空並重建 www
+if (fs.existsSync(wwwDir)) {
+  fs.rmSync(wwwDir, { recursive: true, force: true });
+  console.log('Cleaned: www/');
+}
+ensureDir(wwwDir);
+
+for (const file of filesToCopy) {
+  const src = path.join(__dirname, file);
+  const dest = path.join(wwwDir, file);
+  if (!fs.existsSync(src)) {
+    console.warn(`Missing source file: ${src}`);
+    continue;
+  }
+  copyFile(src, dest);
+}
+
+for (const dir of dirsToCopy) {
+  const src = path.join(__dirname, dir);
+  const dest = path.join(wwwDir, dir);
+  if (!fs.existsSync(src)) {
+    console.warn(`Missing source directory: ${src}`);
+    continue;
+  }
+  copyDir(src, dest);
+}
+
+console.log('\n✅ www/ 构建完成');
+console.log('下一步请执行: npx cap sync android');
+console.log('然后进入 android 目录运行: ./gradlew assembleDebug');
