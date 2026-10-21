@@ -1434,6 +1434,34 @@
     font-size: 0.85rem;
 }
 
+/* 語言切換 */
+.language-row {
+    gap: 12px;
+}
+
+.language-row .lang-code {
+    color: var(--gray);
+    font-size: 0.75rem;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.language-row .lang-check {
+    color: var(--accent);
+    opacity: 0;
+    width: 20px;
+    text-align: right;
+    transition: opacity 0.2s ease;
+}
+
+.language-row.selected {
+    background: rgba(141, 181, 150, 0.14);
+}
+
+.language-row.selected .lang-check {
+    opacity: 1;
+}
+
 /* ========== 桌面端頁腳 ========== */
 .app-footer {
     display: none;
@@ -1635,7 +1663,468 @@
     font-size: 1.6rem;
 }
 
+/* ========== 桌面寵物（鯨魚） ========== */
+.pet-container {
+    position: fixed;
+    left: calc(100% - 62px);
+    top: calc(100% - 118px);
+    width: 64px;
+    height: 64px;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+    will-change: transform, left, top;
+}
+
+.pet-container.dragging {
+    cursor: grabbing;
+}
+
+.pet-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transition: filter 0.2s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    will-change: transform;
+}
+
+.pet-container.dragging .pet-image {
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+}
+
+.pet-image.flipping {
+    animation: petFlip 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes petFlip {
+    0% { transform: rotateY(0deg) scale(1); }
+    25% { transform: rotateY(90deg) scale(1.1); }
+    50% { transform: rotateY(180deg) scale(1.1); }
+    75% { transform: rotateY(270deg) scale(1.1); }
+    100% { transform: rotateY(360deg) scale(1); }
+}
+
+.pet-bubble {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    transform-origin: bottom center;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 9px 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: normal;
+    width: max-content;
+    max-width: 220px;
+    text-align: center;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+}
+
+.pet-bubble.show {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+.pet-bubble-arrow {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid rgba(0, 0, 0, 0.85);
+}
+
+.pet-container.bounce .pet-image {
+    animation: petBounceFlash 0.2s ease;
+}
+
+@keyframes petBounceFlash {
+    0% { filter: brightness(1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)); }
+    50% { filter: brightness(1.3) drop-shadow(0 0 20px rgba(212, 165, 116, 0.8)); }
+    100% { filter: brightness(1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)); }
+}
+
+@media (max-width: 480px) {
+    .pet-container {
+        width: 58px;
+        height: 58px;
+    }
+}
+
+/* ========== AI 健康助手聊天 ========== */
+body.ai-chat-open {
+    overflow: hidden;
+}
+
+.ai-chat-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.ai-chat-overlay.open {
+    display: flex;
+}
+
+.ai-chat-panel {
+    width: min(560px, 100%);
+    height: min(760px, 86vh);
+    max-height: 86vh;
+    background: var(--light-bg);
+    border: 1px solid var(--primary-light);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ai-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: var(--dark);
+    flex-shrink: 0;
+}
+
+.ai-chat-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.ai-chat-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.ai-chat-heading h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.ai-chat-heading p {
+    margin: 2px 0 0;
+    font-size: 0.74rem;
+    opacity: 0.8;
+}
+
+.ai-chat-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.ai-chat-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.ai-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    background: var(--light);
+}
+
+.ai-chat-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    animation: aiChatFadeIn 0.25s ease;
+}
+
+.ai-chat-msg-user {
+    justify-content: flex-end;
+    flex-direction: row;
+}
+
+@keyframes aiChatFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-chat-msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-chat-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--secondary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.ai-chat-msg-body {
+    max-width: 76%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-chat-msg-user .ai-chat-msg-body {
+    align-items: flex-end;
+}
+
+.ai-chat-time {
+    font-size: 0.62rem;
+    color: var(--gray);
+    margin-bottom: 4px;
+}
+
+.ai-chat-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ai-chat-msg-ai .ai-chat-bubble {
+    background: #fff;
+    color: #3f352b;
+    border-top-left-radius: 4px;
+}
+
+.ai-chat-msg-user .ai-chat-bubble {
+    background: linear-gradient(135deg, var(--primary) 0%, #c98f55 100%);
+    color: #fff;
+    border-top-right-radius: 4px;
+}
+
+.ai-chat-bubble.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.ai-chat-bubble pre {
+    background: #f4f1ea;
+    padding: 8px 10px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 6px 0;
+    white-space: pre-wrap;
+}
+
+.ai-chat-bubble code {
+    background: #f4f1ea;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: #a35c2c;
+}
+
+.ai-chat-bubble pre code {
+    padding: 0;
+    background: none;
+    color: inherit;
+}
+
+.ai-chat-typing-bubble {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 14px 16px;
+}
+
+.ai-chat-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: aiChatDot 1.4s infinite ease-in-out both;
+}
+
+.ai-chat-dot:nth-child(1) { animation-delay: -0.32s; }
+.ai-chat-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes aiChatDot {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+.ai-chat-input-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #fff;
+    border-top: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.ai-chat-input {
+    flex: 1;
+    min-height: 42px;
+    max-height: 120px;
+    resize: none;
+    border: none;
+    outline: none;
+    background: #f5f1e8;
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--dark);
+    font-family: inherit;
+}
+
+.ai-chat-input::placeholder {
+    color: #a99c8c;
+}
+
+.ai-chat-send {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: #d8cfc2;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.ai-chat-send.active {
+    background: linear-gradient(135deg, var(--primary) 0%, #c98f55 100%);
+    box-shadow: 0 4px 14px rgba(212, 165, 116, 0.45);
+}
+
+.ai-chat-send:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .ai-chat-overlay {
+        padding: 0;
+    }
+
+    .ai-chat-panel {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+        border-radius: 0;
+        border: none;
+    }
+
+    .ai-chat-header {
+        padding-top: calc(14px + env(safe-area-inset-top));
+    }
+
+    .ai-chat-input-area {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .ai-chat-msg-body {
+        max-width: 82%;
+    }
+}
+
+/* ========== 設定頁開關 ========== */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #d5d0c8;
+    border-radius: 26px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.switch input:checked + .slider {
+    background: var(--accent);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
     </style>
+    <script src="i18n.js"></script>
     <script src="auth.js"></script>
     <script src="hospital-map.js"></script>
     <script>
@@ -1715,7 +2204,7 @@ let deferredPrompt = null;
                 if (outcome === 'accepted') {
                     localStorage.setItem('appInstalled', 'true');
                     installPrompt.classList.remove('active');
-                    alert('✅ 已成功添加到桌面！');
+                    alert(I18n.t('✅ 已成功添加到桌面！'));
                 }
                 
                 deferredPrompt = null;
@@ -1812,7 +2301,7 @@ async function testBackendConnection() {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP错误: ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         
         const data = await response.json();
@@ -1851,9 +2340,9 @@ document.addEventListener('click', function() {
 
 function updateUserInfo() {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const userName = currentUser.name || '猫咪家长';
-    const userEmail = currentUser.email || '欢迎使用';
-    
+    const userName = currentUser.name || I18n.t('猫咪家长');
+    const userEmail = currentUser.email || I18n.t('欢迎使用');
+
     // 更新顶部用户信息
     const userInfoElement = document.querySelector('.user-info');
     if (userInfoElement) {
@@ -1861,17 +2350,17 @@ function updateUserInfo() {
             <div class="user-avatar">
                 <i class="fas fa-user"></i>
             </div>
-            <div>
-                <div>${userName}</div>
-                <div style="font-size: 0.8rem; color: var(--gray);">${userEmail}</div>
+            <div data-i18n-skip>
+                <div>${esc(userName)}</div>
+                <div style="font-size: 0.8rem; color: var(--gray);">${esc(userEmail)}</div>
             </div>
         `;
     }
-    
+
     // 更新欢迎标语
     const welcomeTitle = document.querySelector('.welcome-banner h2');
     if (welcomeTitle) {
-        welcomeTitle.innerHTML = `欢迎回来，${userName}！`;
+        welcomeTitle.textContent = I18n.t('欢迎回来，{name}！', { name: userName });
     }
 }
 
@@ -1914,12 +2403,13 @@ function showPage(pageId) {
         'pets': '猫咪档案',
         'health-survey': '健康评估问卷',
         'hospital': '附近医院',
+        'health-detail': '健康详情',
         'settings': '设置'
     };
-    
+
     const titleElement = document.getElementById('page-title');
     if (titleElement && pageTitles[pageId]) {
-        titleElement.textContent = pageTitles[pageId];
+        titleElement.textContent = I18n.t(pageTitles[pageId]);
     }
 
 
@@ -1975,18 +2465,40 @@ function initSettingsPage() {
     const backendEl = document.getElementById('settings-backend-url');
     if (backendEl) backendEl.textContent = CLOUD_AI_URL;
 
+    // 更新語言切換的選中狀態
+    refreshLanguageSwitcher();
+
     // 關閉用戶下拉選單
     const dropdown = document.getElementById('user-dropdown');
     if (dropdown) dropdown.classList.remove('active');
 }
 
+// 切換語言（重新載入以確保所有動態內容一致）
+function changeLanguage(lang) {
+    if (!window.I18n || lang === I18n.getLanguage()) return;
+    I18n.setLanguage(lang);
+    try {
+        sessionStorage.setItem('cathealth_return_page', 'settings');
+    } catch (e) { /* ignore */ }
+    window.location.reload();
+}
+
+// 更新語言列目前的選中狀態
+function refreshLanguageSwitcher() {
+    if (!window.I18n) return;
+    const current = I18n.getLanguage();
+    document.querySelectorAll('.language-row[data-lang]').forEach(function(row) {
+        row.classList.toggle('selected', row.getAttribute('data-lang') === current);
+    });
+}
+
 // 清除應用緩存
 function clearAppCache() {
-    if (confirm('確定要清除本地緩存嗎？這不會刪除您的賬號數據。')) {
+    if (confirm(I18n.t('確定要清除本地緩存嗎？這不會刪除您的賬號數據。'))) {
         localStorage.removeItem('cathealth_remember_login');
         localStorage.removeItem('cathealth_saved_email');
         localStorage.removeItem('cathealth_saved_password');
-        alert('✅ 本地緩存已清除');
+        alert(I18n.t('✅ 本地缓存已清除'));
     }
 }
 
@@ -2015,14 +2527,14 @@ function closeAddPetModal() {
 async function addNewPet() {
     const name = document.getElementById("new-pet-name").value.trim();
     if (!name) {
-        alert("请输入猫咪名字");
+        alert(I18n.t("请输入猫咪名字"));
         return;
     }
 
     // 檢查是否已登錄
     const token = localStorage.getItem('cathealth_token');
     if (!token) {
-        alert("請先登錄再添加貓咪");
+        alert(I18n.t("请先登录再添加猫咪"));
         window.location.href = 'index.html';
         return;
     }
@@ -2044,13 +2556,13 @@ async function addNewPet() {
             closeAddPetModal();
             renderDashboardPets();
             renderPetsPage();
-            alert("✅ 猫咪添加成功！");
+            alert(I18n.t("✅ 猫咪添加成功！"));
         } else {
-            alert("添加失敗: " + result.error);
+            alert(I18n.t("添加失败: {msg}", { msg: I18n.translate(result.error) }));
         }
     } catch (error) {
         console.error("添加貓咪失敗:", error);
-        alert("添加失敗，請檢查網絡連接");
+        alert(I18n.t("添加失败，请检查网络连接"));
     }
 }
 
@@ -2075,13 +2587,17 @@ function esc(value) {
  */
 function formatFeatures(features) {
     if (!features) return "";
-    if (typeof features === "string") return esc(features);
-    if (typeof features !== "object") return esc(features);
+    if (typeof features === "string") return esc(I18n.backend(features));
+    if (typeof features !== "object") return esc(I18n.backend(features));
 
-    const labels = { color: "颜色", texture: "质地", shape: "形状" };
+    const labels = {
+        color: I18n.t("颜色"),
+        texture: I18n.t("质地"),
+        shape: I18n.t("形状")
+    };
     return Object.keys(features)
-        .map(key => `${labels[key] || key}：${esc(features[key])}`)
-        .join("　·　");
+        .map(key => `${esc(labels[key] || key)}: ${esc(I18n.backend(features[key]))}`)
+        .join(" · ");
 }
 
 // 渲染主页面的猫咪
@@ -2107,8 +2623,8 @@ function renderDashboardPets() {
                      style="${pet.photo ? `background-image: url('${esc(pet.photo)}')` : `background-color: ${getAvatarColor(pet.id)}`}">
                     ${pet.photo ? '' : '<i class="fas fa-cat"></i>'}
                 </div>
-                <h3>${esc(pet.name)}</h3>
-                <p>${esc(pet.breed) || "未知品种"} · ${esc(pet.age) || "未知年龄"}</p>
+                <h3 data-i18n-skip>${esc(pet.name)}</h3>
+                <p>${esc(pet.breed) || esc(I18n.t("未知品种"))} · ${esc(pet.age) || esc(I18n.t("未知年龄"))}</p>
             </div>
             <div class="pet-body">
                 <div class="pet-info">
@@ -2164,8 +2680,8 @@ function renderPetsPage() {
                      onclick="viewPetDetail('${esc(pet.id)}')">
                     ${pet.photo ? '' : '<i class="fas fa-cat"></i>'}
                 </div>
-                <h3>${esc(pet.name)}</h3>
-                <p>${esc(pet.breed) || "未知品种"} · ${esc(pet.age) || "未知年龄"}</p>
+                <h3 data-i18n-skip>${esc(pet.name)}</h3>
+                <p>${esc(pet.breed) || esc(I18n.t("未知品种"))} · ${esc(pet.age) || esc(I18n.t("未知年龄"))}</p>
             </div>
             <div class="pet-body">
                 <div class="pet-info">
@@ -2186,7 +2702,7 @@ function renderPetsPage() {
                         <div class="info-value" style="color: #28a745;">健康</div>
                     </div>
                 </div>
-                ${pet.notes ? `<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem; color: var(--gray);">${esc(pet.notes)}</div>` : ""}
+                ${pet.notes ? `<div data-i18n-skip style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem; color: var(--gray);">${esc(pet.notes)}</div>` : ""}
                 <div class="pet-actions">
                     <button class="btn btn-primary" onclick="viewPetDetail('${esc(pet.id)}')">
                         <i class="fas fa-edit"></i> 编辑信息
@@ -2207,7 +2723,7 @@ function getAvatarColor(id) {
 }
 
 async function deletePet(petId) {
-    if (confirm("确定要删除这只猫咪吗？此操作无法撤销。")) {
+    if (confirm(I18n.t("确定要删除这只猫咪吗？此操作无法撤销。"))) {
         try {
             const result = await deleteCatAPI(petId);
             if (result.success) {
@@ -2215,11 +2731,11 @@ async function deletePet(petId) {
                 renderDashboardPets();
                 renderPetsPage();
             } else {
-                alert("刪除失敗: " + result.error);
+                alert(I18n.t("删除失败: {msg}", { msg: I18n.translate(result.error) }));
             }
         } catch (error) {
             console.error("刪除貓咪失敗:", error);
-            alert("刪除失敗，請檢查網絡連接");
+            alert(I18n.t("删除失败，请检查网络连接"));
         }
     }
 }
@@ -2244,13 +2760,13 @@ function changePetPhoto(petId) {
                             allPets[petIndex].photo = photoUrl;
                             renderDashboardPets();
                             renderPetsPage();
-                            alert("✅ 猫咪照片更新成功！");
+                            alert(I18n.t("✅ 猫咪照片更新成功！"));
                         } else {
-                            alert("更新失敗: " + result.error);
+                            alert(I18n.t("更新失败: {msg}", { msg: I18n.translate(result.error) }));
                         }
                     } catch (error) {
                         console.error("更新照片失敗:", error);
-                        alert("更新失敗，請檢查網絡連接");
+                        alert(I18n.t("更新失败，请检查网络连接"));
                     }
                 }
             };
@@ -2277,7 +2793,7 @@ function viewPetDetail(petId) {
 function viewHealthDetail(petId) {
     const pet = allPets.find(p => p.id === petId);
     if (pet) {
-        alert(`正在查看 ${pet.name} 的健康详情...\n\n这个功能正在开发中，即将推出！`);
+        alert(I18n.t('正在查看 {name} 的健康详情... 这个功能正在开发中，即将推出！', { name: pet.name }));
     }
 }
 
@@ -2305,13 +2821,13 @@ async function saveHealthDetail() {
                 renderDashboardPets();
                 renderPetsPage();
                 showPage("pets");
-                alert("✅ 健康信息更新成功！");
+                alert(I18n.t("✅ 健康信息更新成功！"));
             } else {
-                alert("更新失敗: " + result.error);
+                alert(I18n.t("更新失败: {msg}", { msg: I18n.translate(result.error) }));
             }
         } catch (error) {
             console.error("更新健康信息失敗:", error);
-            alert("更新失敗，請檢查網絡連接");
+            alert(I18n.t("更新失败，请检查网络连接"));
         }
     }
 }
@@ -2347,7 +2863,7 @@ function initYOLOUpload() {
             // 开始分析
             handleImageUpload(file).catch(err => {
                 console.error("分析失败:", err);
-                alert("分析失败: " + err.message);
+                alert(I18n.t("分析失败: {msg}", { msg: err.message }));
             });
         }
     });
@@ -2424,7 +2940,7 @@ async function handleImageUpload(file) {
         console.log("响应状态:", response.status);
         
         if (!response.ok) {
-            throw new Error(`HTTP错误: ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         
         const result = await response.json();
@@ -2433,7 +2949,7 @@ async function handleImageUpload(file) {
         if (result.success) {
             showAnalysisResult(result);
         } else {
-            throw new Error(result.error || "分析失败");
+            throw new Error(I18n.translate(result.error || "分析失败"));
         }
         
     } catch (error) {
@@ -2441,14 +2957,14 @@ async function handleImageUpload(file) {
         console.error("[DEBUG] Error stack:", error.stack);
 
         // 區分超時與其他網路錯誤
-        let errorMsg = error.message || "未知錯誤";
+        let errorMsg = error.message || "未知错误";
         let extraHint = "";
         if (error.name === "AbortError" || errorMsg.includes("timeout") || errorMsg.includes("The operation timed out")) {
-            errorMsg = "請求超時";
-            extraHint = "Render 免費版喚醒需要 30-60 秒，請重新嘗試。";
+            errorMsg = "请求超时";
+            extraHint = "Render 免费版唤醒需要 30-60 秒，请重新尝试。";
         } else if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
-            errorMsg = "無法連接到後端服務";
-            extraHint = "可能原因：<br>1. 後端正在啟動中（Render 免費版剛喚醒）<br>2. 手機網路不穩定<br>3. 後端服務暫時不可用";
+            errorMsg = "无法连接到后端服务";
+            extraHint = "可能原因：<br>1. 后端正在启动中（Render 免费版刚唤醒）<br>2. 手机网络不稳定<br>3. 后端服务暂时不可用";
         }
 
         // 显示错误信息
@@ -2483,6 +2999,8 @@ function showAnalysisResult(result) {
     // 標示。先前前端完全不讀取這個欄位，導致模擬數據與真實 AI 分析在畫面上長得
     // 一模一樣——使用者只能靠「數字看起來很亂」察覺，對健康類應用是嚴重的安全問題。
     const isSimulated = result.service === "backup_ai";
+    const healthMessage = I18n.backend(result.health_analysis.message);
+    const healthRecommendation = I18n.backend(result.health_analysis.recommendation);
     const simulationBanner = isSimulated ? `
         <div style="background: #f8d7da; border: 2px solid #dc3545; padding: 16px; border-radius: 8px; margin-bottom: 20px; color: #721c24;">
             <h4 style="margin: 0 0 8px 0;">
@@ -2503,7 +3021,7 @@ function showAnalysisResult(result) {
 
         <div class="result-grid">
             <div class="result-item">
-                <div class="result-value" style="color: ${result.risk_metrics.color};">${result.health_analysis.message}</div>
+                <div class="result-value" style="color: ${result.risk_metrics.color};">${esc(healthMessage)}</div>
                 <div class="result-label">健康状态</div>
             </div>
             <div class="result-item">
@@ -2529,7 +3047,7 @@ function showAnalysisResult(result) {
             <h4 style="margin-bottom: 10px; color: #155724;">
                 <i class="fas fa-heartbeat"></i> 健康建议
             </h4>
-            <p style="color: #155724; margin: 0;">${esc(result.health_analysis.recommendation)}</p>
+            <p style="color: #155724; margin: 0;">${esc(healthRecommendation)}</p>
         </div>
         
         <div style="background: #fff3cd; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 16px 0; font-size: 0.85rem; color: #664d03;">
@@ -2708,6 +3226,17 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     // 加載用戶數據
     await loadUserData();
+
+    // 切換語言後重新載入時，回到設定頁
+    try {
+        const returnPage = sessionStorage.getItem('cathealth_return_page');
+        if (returnPage) {
+            sessionStorage.removeItem('cathealth_return_page');
+            if (document.getElementById(returnPage + '-page')) {
+                showPage(returnPage);
+            }
+        }
+    } catch (e) { /* ignore */ }
 });
 
 // ==================== 调试命令 ====================
@@ -2730,7 +3259,7 @@ function initHealthSurvey() {
         allPets.forEach(pet => {
             const option = document.createElement('option');
             option.value = pet.id;
-            option.textContent = `${pet.name} (${pet.breed || '未知品种'})`;
+            option.textContent = `${pet.name} (${pet.breed || I18n.t('未知品种')})`;
             petSelect.appendChild(option);
         });
     }
@@ -2772,15 +3301,15 @@ function calculateHealthScore() {
     const weight = parseFloat(document.getElementById('survey-weight').value);
     
     if (!petId) {
-        alert('请选择要评估的猫咪');
+        alert(I18n.t('请选择要评估的猫咪'));
         return;
     }
-    
+
     const petIdNum = parseInt(petId, 10);
     const pet = allPets.find(p => p.id === petIdNum || p.id == petId);
     if (!pet) {
         console.error('[calculateHealthScore] 找不到貓咪:', petId, allPets);
-        alert('找不到該貓咪資料');
+        alert(I18n.t('找不到该猫咪资料'));
         return;
     }
     
@@ -2856,7 +3385,7 @@ function showSurveyResults(overallHealth, dietScore, activityLevel, weight, petN
 
     resultsDiv.innerHTML = `
         <h3 style="text-align: center; margin-bottom: 30px; color: var(--dark);">
-            <i class="fas fa-file-medical-alt"></i> ${petName}的健康评估报告
+            <i class="fas fa-file-medical-alt"></i> ${esc(I18n.t('{name}的健康评估报告', { name: petName }))}
         </h3>
 
         <div class="result-grid">
@@ -2907,7 +3436,7 @@ function showSurveyResults(overallHealth, dietScore, activityLevel, weight, petN
 // 保存健康評估到後端
 async function saveHealthSurvey() {
     if (!currentSurveyData) {
-        alert('沒有評估數據可保存');
+        alert(I18n.t('没有评估数据可保存'));
         return;
     }
 
@@ -2946,13 +3475,13 @@ async function saveHealthSurvey() {
                 console.warn('[saveHealthSurvey] 體重更新失敗（不影響報告保存）:', weightError);
             }
 
-            alert('✅ 健康評估報告保存成功！');
+            alert(I18n.t('✅ 健康评估报告保存成功！'));
         } else {
-            alert('保存失敗: ' + (result.error || '未知錯誤'));
+            alert(I18n.t('保存失败: {msg}', { msg: I18n.translate(result.error || I18n.t('未知错误')) }));
         }
     } catch (error) {
         console.error('保存健康評估失敗:', error);
-        alert('保存失敗，請檢查網絡連接');
+        alert(I18n.t('保存失败，请检查网络连接'));
     }
 }
 
@@ -3084,6 +3613,9 @@ function ensureNoDuplicatePages() {
                 </a>
                 <a class="nav-item" data-page="settings">
                     <i class="fas fa-cog"></i>设置
+                </a>
+                <a class="nav-item" href="#" onclick="openAIChat(event); return false;">
+                    <i class="fas fa-comment-dots"></i>AI 健康助手
                 </a>
             </div>
         </nav>
@@ -3245,7 +3777,7 @@ function ensureNoDuplicatePages() {
                 <div class="hospital-grid-container">
                     <!-- 地圖區域 -->
                     <div style="background: #f5f5f5; border-radius: 10px; overflow: hidden; position: relative; min-height: 400px;">
-                        <div id="hospital-map-container" style="width: 100%; height: 100%; min-height: 400px;"></div>
+                        <div id="hospital-map-container" data-i18n-skip style="width: 100%; height: 100%; min-height: 400px;"></div>
                     </div>
 
                     <!-- 醫院列表 -->
@@ -3623,16 +4155,62 @@ function ensureNoDuplicatePages() {
 
                 <div class="analysis-section">
                     <div class="section-title">
+                        <i class="fas fa-globe"></i> 语言
+                    </div>
+                    <div class="settings-card" id="language-settings-card">
+                        <div class="settings-row settings-action language-row" data-lang="zh-TW" onclick="changeLanguage('zh-TW')" data-i18n-skip>
+                            <div class="settings-label"><i class="fas fa-language"></i> 繁體中文 <span class="lang-code">zh-TW</span></div>
+                            <div class="settings-arrow lang-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="settings-row settings-action language-row" data-lang="zh-CN" onclick="changeLanguage('zh-CN')" data-i18n-skip>
+                            <div class="settings-label"><i class="fas fa-language"></i> 简体中文 <span class="lang-code">zh-CN</span></div>
+                            <div class="settings-arrow lang-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="settings-row settings-action language-row" data-lang="en" onclick="changeLanguage('en')" data-i18n-skip>
+                            <div class="settings-label"><i class="fas fa-language"></i> English <span class="lang-code">en</span></div>
+                            <div class="settings-arrow lang-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="settings-row settings-action language-row" data-lang="pt" onclick="changeLanguage('pt')" data-i18n-skip>
+                            <div class="settings-label"><i class="fas fa-language"></i> Português <span class="lang-code">pt</span></div>
+                            <div class="settings-arrow lang-check"><i class="fas fa-check"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
+                        <i class="fas fa-robot"></i> AI 健康助手
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-paw"></i> 桌面宠物</div>
+                            <label class="switch">
+                                <input type="checkbox" id="pet-enabled-toggle" aria-label="桌面宠物">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-volume-up"></i> 宠物音效</div>
+                            <label class="switch">
+                                <input type="checkbox" id="pet-sound-toggle" aria-label="宠物音效">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-title">
                         <i class="fas fa-user"></i> 账号信息
                     </div>
                     <div class="settings-card">
                         <div class="settings-row">
                             <div class="settings-label">用户名</div>
-                            <div class="settings-value" id="settings-user-name">-</div>
+                            <div class="settings-value" id="settings-user-name" data-i18n-skip>-</div>
                         </div>
                         <div class="settings-row">
                             <div class="settings-label">邮箱</div>
-                            <div class="settings-value" id="settings-user-email">-</div>
+                            <div class="settings-value" id="settings-user-email" data-i18n-skip>-</div>
                         </div>
                     </div>
                 </div>
@@ -3839,6 +4417,35 @@ function ensureNoDuplicatePages() {
         </div>
     </div>
 
+    <!-- 桌面寵物（鯨魚） -->
+    <div id="pet-float" class="pet-container" role="button" tabindex="0" aria-label="打开 AI 健康助手">
+        <img id="pet-image" class="pet-image" src="pet/D.png" alt="" draggable="false">
+        <div id="pet-bubble" class="pet-bubble" aria-hidden="true">
+            <span id="pet-bubble-text"></span>
+            <span class="pet-bubble-arrow"></span>
+        </div>
+    </div>
+
+    <!-- AI 健康助手聊天 -->
+    <div class="ai-chat-overlay" id="ai-chat-overlay" role="dialog" aria-modal="true" aria-labelledby="ai-chat-title" aria-hidden="true">
+        <div class="ai-chat-panel" id="ai-chat-panel">
+            <div class="ai-chat-header">
+                <img class="ai-chat-avatar" src="pet/Dsleep-avatar.png" alt="">
+                <div class="ai-chat-heading">
+                    <h3 id="ai-chat-title">CatHealth 健康助手</h3>
+                    <p>猫咪健康问答</p>
+                </div>
+                <button type="button" class="ai-chat-icon-btn" id="ai-chat-clear" title="清空对话" aria-label="清空对话"><i class="fas fa-trash-alt"></i></button>
+                <button type="button" class="ai-chat-icon-btn" id="ai-chat-close" title="关闭" aria-label="关闭"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ai-chat-messages" id="ai-chat-messages" aria-live="polite"></div>
+            <form class="ai-chat-input-area" id="ai-chat-form">
+                <textarea id="ai-chat-input" class="ai-chat-input" rows="1" maxlength="2000" placeholder="输入讯息..." aria-label="输入讯息"></textarea>
+                <button type="submit" id="ai-chat-send" class="ai-chat-send" aria-label="发送" disabled><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+
 <script>
 // ==================== 醫院詳情側邊欄控制 ====================
 
@@ -4000,6 +4607,9 @@ document.addEventListener('keydown', function(e) {
             });
     }
 </script>
+
+<script src="ai-chat.js"></script>
+<script src="pet-float.js"></script>
 
 </body>
 </html>

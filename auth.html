@@ -804,6 +804,7 @@
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="auth.js"></script>
     <script>
         console.log('登录页面加载完成');
@@ -867,7 +868,7 @@
 
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登錄中...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + I18n.t('登录中...');
             submitBtn.disabled = true;
 
             try {
@@ -887,19 +888,19 @@
                     saveLoginCredentials(email, password, rememberAccount, rememberPassword);
 
                     console.log('登錄成功:', data.user);
-                    alert(`歡迎回來，${data.user.name}！`);
+                    alert(I18n.t('欢迎回来，{name}！', { name: data.user.name }));
                     window.location.href = 'dashboard.html';
                 } else {
-                    alert(data.error || '登錄失敗');
+                    alert(data.error || I18n.t('登录失败'));
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }
             } catch (error) {
                 console.error('登錄錯誤:', error);
                 if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-                    alert('無法連接到服務器。可能是：\n1. 服務器正在啟動，請等待 30 秒後重試\n2. 網絡連接問題\n\n請檢查後端服務狀態或稍後再試。');
+                    alert(I18n.t('无法连接到服务器。可能是： 1. 服务器正在启动，请等待 30 秒后重试 2. 网络连接问题 请检查后端服务状态或稍后再试。'));
                 } else {
-                    alert('網絡錯誤: ' + error.message);
+                    alert(I18n.t('网络错误: {msg}', { msg: error.message }));
                 }
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -917,23 +918,23 @@
             const agreeTerms = document.getElementById('agree-terms').checked;
 
             if (password !== confirmPassword) {
-                alert('兩次輸入的密碼不一致');
+                alert(I18n.t('两次输入的密码不一致'));
                 return;
             }
 
             if (password.length < 8) {
-                alert('密碼長度至少8位');
+                alert(I18n.t('密码长度至少8位'));
                 return;
             }
 
             if (!agreeTerms) {
-                alert('請同意服務條款和隱私政策');
+                alert(I18n.t('请同意服务条款和隐私政策'));
                 return;
             }
 
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 註冊中...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + I18n.t('注册中...');
             submitBtn.disabled = true;
 
             try {
@@ -949,19 +950,19 @@
                     localStorage.setItem('cathealth_token', data.token);
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     console.log('註冊成功:', data.user);
-                    alert('註冊成功！歡迎使用 CatHealth Monitor');
+                    alert(I18n.t('注册成功！欢迎使用 CatHealth Monitor'));
                     window.location.href = 'dashboard.html';
                 } else {
-                    alert(data.error || '註冊失敗');
+                    alert(data.error || I18n.t('注册失败'));
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }
             } catch (error) {
                 console.error('註冊錯誤:', error);
                 if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-                    alert('無法連接到服務器。可能是：\n1. 服務器正在啟動，請等待 30 秒後重試\n2. 網絡連接問題\n\n請檢查後端服務狀態或稍後再試。');
+                    alert(I18n.t('无法连接到服务器。可能是： 1. 服务器正在启动，请等待 30 秒后重试 2. 网络连接问题 请检查后端服务状态或稍后再试。'));
                 } else {
-                    alert('網絡錯誤: ' + error.message);
+                    alert(I18n.t('网络错误: {msg}', { msg: error.message }));
                 }
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -1034,7 +1035,7 @@
                         window.open(GOOGLE_FORM_URL, '_blank');
                     } else {
                         console.log('用戶反饋:', { type, title, detail, email });
-                        alert('感謝您的反饋！我們會認真參考您的建議。');
+                        alert(I18n.t('感谢您的反馈！我们会认真参考您的建议。'));
                     }
                     this.reset();
                     closeModal('feedback-modal');

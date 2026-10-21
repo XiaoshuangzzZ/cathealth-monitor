@@ -217,7 +217,7 @@ function addLocationButton() {
  */
 function locateUser() {
     if (!navigator.geolocation) {
-        alert('您的瀏覽器不支持地理定位');
+        alert(I18n.t('您的瀏覽器不支持地理定位'));
         return;
     }
 
@@ -228,7 +228,7 @@ function locateUser() {
 
             // 檢查是否在澳門範圍內（大致）
             if (userLat < 22.1 || userLat > 22.2 || userLng < 113.5 || userLng > 113.6) {
-                alert('您當前位置不在澳門境內，顯示澳門中心位置');
+                alert(I18n.t('您當前位置不在澳門境內，顯示澳門中心位置'));
                 map.setCenter(new TMap.LatLng(22.1987, 113.5439));
                 return;
             }
@@ -257,11 +257,14 @@ function locateUser() {
 
             // 找到最近的醫院
             const nearest = findNearestHospital(userLat, userLng);
-            alert(`最近的寵物醫院是：${nearest.name}，距離約 ${nearest.distance.toFixed(1)} 公里`);
+            alert(I18n.t('最近的寵物醫院是：{name}，距離約 {distance} 公里', {
+                name: nearest.name,
+                distance: nearest.distance.toFixed(1)
+            }));
         },
         (error) => {
             console.error('定位失敗:', error);
-            alert('無法獲取您的位置，請確保已允許定位權限');
+            alert(I18n.t('無法獲取您的位置，請確保已允許定位權限'));
         }
     );
 }
@@ -322,11 +325,11 @@ function showMapPlaceholder(containerId) {
                     flex-direction: column; justify-content: center; align-items: center;
                     border-radius: 10px;">
             <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: #ddd; margin-bottom: 20px;"></i>
-            <p style="color: #999; margin-bottom: 15px;">請設置騰訊地圖 API Key 以顯示地圖</p>
+            <p style="color: #999; margin-bottom: 15px;">${I18n.t('請設置騰訊地圖 API Key 以顯示地圖')}</p>
             <div style="background: white; padding: 20px; border-radius: 8px; max-width: 90%;
                         box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 <h4 style="margin: 0 0 15px 0; color: #5C4B37;">
-                    <i class="fas fa-hospital" style="color: #D4A574;"></i> 澳門寵物醫院列表
+                    <i class="fas fa-hospital" style="color: #D4A574;"></i> ${I18n.t('澳門寵物醫院列表')}
                 </h4>
                 ${MACAU_PET_HOSPITALS.map(h => `
                     <div style="padding: 12px; border-bottom: 1px solid #eee;">
@@ -338,7 +341,7 @@ function showMapPlaceholder(containerId) {
                         </div>
                         <div style="font-size: 0.85rem; color: #666;">
                             <i class="fas fa-phone" style="color: #D4A574;"></i> ${h.phone} |
-                            <i class="fas fa-clock" style="color: #D4A574;"></i> ${h.hours}
+                            <i class="fas fa-clock" style="color: #D4A574;"></i> ${I18n.t(h.hours)}
                         </div>
                     </div>
                 `).join('')}

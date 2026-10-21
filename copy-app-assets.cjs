@@ -8,9 +8,13 @@ const entries = [
   'dashboard.html',
   'auth.js',
   'hospital-map.js',
+  'i18n.js',
+  'ai-chat.js',
+  'pet-float.js',
   'manifest.json',
   'service-worker.js',
   'images',
+  'pet',
 ]
 
 function copyEntry(entry) {
