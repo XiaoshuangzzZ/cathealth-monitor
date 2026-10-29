@@ -117,6 +117,12 @@
     }
 
     function placeInitial() {
+        // In a WebView the first layout pass can briefly report a zero viewport.
+        // Retry instead of leaving the pet stuck in the top-left corner.
+        if (!global.innerWidth || !global.innerHeight) {
+            global.setTimeout(placeInitial, 100);
+            return;
+        }
         x = Math.max(MARGIN, global.innerWidth - 62);
         y = Math.max(MARGIN, global.innerHeight - 118);
         positioned = true;
@@ -402,6 +408,10 @@
     }
 
     function onResize() {
+        if (!positioned) {
+            placeInitial();
+            return;
+        }
         clampPosition();
         applyTransform();
     }

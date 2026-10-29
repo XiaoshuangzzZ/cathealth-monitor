@@ -1,0 +1,594 @@
+{
+  "version": 1,
+  "shared": {
+    "red_flags": {
+      "zh-CN": [
+        "黑便或柏油样便（可能是上消化道出血）",
+        "大量鲜血便或反复便血",
+        "频繁呕吐、无法喝水或明显脱水",
+        "精神极差、虚弱、倒地或呼吸急促",
+        "腹部胀痛、持续叫唤或触摸时疼痛",
+        "公猫频繁蹲猫砂盆却几乎尿不出来（尿闭急症）",
+        "怀疑误食药物、毒物、异物或线绳",
+        "幼猫、老年猫或慢性病猫症状持续"
+      ],
+      "zh-TW": [
+        "黑便或柏油樣便（可能是上消化道出血）",
+        "大量鮮血便或反覆便血",
+        "頻繁嘔吐、無法喝水或明顯脫水",
+        "精神極差、虛弱、倒地或呼吸急促",
+        "腹部脹痛、持續叫喚或觸摸時疼痛",
+        "公貓頻繁蹲貓砂盆卻幾乎尿不出來（尿閉急症）",
+        "懷疑誤食藥物、毒物、異物或線繩",
+        "幼貓、老年貓或慢性病貓症狀持續"
+      ],
+      "en": [
+        "Black or tarry stool (possible upper gastrointestinal bleeding)",
+        "A large amount of fresh blood, or repeated blood in the stool",
+        "Repeated vomiting, inability to keep water down, or clear dehydration",
+        "Severe lethargy, weakness, collapse or rapid breathing",
+        "A painful or bloated abdomen, crying, or pain when touched",
+        "A male cat straining in the litter box with little or no urine (urinary obstruction)",
+        "Suspected ingestion of medication, poison, a foreign object or string",
+        "Ongoing signs in a kitten, senior cat or cat with a chronic illness"
+      ],
+      "pt": [
+        "Fezes pretas ou alcatroadas (possível hemorragia digestiva alta)",
+        "Grande quantidade de sangue fresco ou sangue repetido nas fezes",
+        "Vómitos repetidos, incapacidade de reter água ou desidratação evidente",
+        "Apatia grave, fraqueza, colapso ou respiração rápida",
+        "Abdómen doloroso ou distendido, vocalização ou dor ao toque",
+        "Gato macho a fazer força na areia com pouca ou nenhuma urina (obstrução urinária)",
+        "Suspeita de ingestão de medicamentos, veneno, corpo estranho ou fio",
+        "Sinais persistentes num gatinho, gato idoso ou gato com doença crónica"
+      ]
+    },
+    "medication_warning": {
+      "zh-CN": "不要自行给猫使用人用药物。对乙酰氨基酚（扑热息痛）、布洛芬、阿司匹林、萘普生等常用人用止痛药可能对猫致命；也不要自行使用人用止泻药、泻药或灌肠剂。任何药物（包括益生菌、驱虫药、止吐药）都应先由兽医评估并确定剂量。",
+      "zh-TW": "不要自行給貓使用人用藥物。對乙醯氨基酚（撲熱息痛）、布洛芬、阿司匹林、萘普生等常用人用止痛藥可能對貓致命；也不要自行使用人用止瀉藥、瀉藥或灌腸劑。任何藥物（包括益生菌、驅蟲藥、止吐藥）都應先由獸醫評估並確定劑量。",
+      "en": "Never give your cat human medications. Acetaminophen (paracetamol), ibuprofen, aspirin, naproxen and other common human pain relievers can be fatal to cats. Do not use human anti-diarrhoeal drugs, laxatives or enemas without veterinary advice. All medication — including probiotics, dewormers and anti-nausea drugs — should be assessed and dosed by a veterinarian.",
+      "pt": "Nunca dê medicamentos humanos ao seu gato. Paracetamol, ibuprofeno, aspirina, naproxeno e outros analgésicos humanos comuns podem ser fatais para gatos. Não use antidiarreicos, laxantes ou enemas humanos sem indicação veterinária. Todos os medicamentos — incluindo probióticos, desparasitantes e antieméticos — devem ser avaliados e doseados por um veterinário."
+    },
+    "typical_note": {
+      "zh-CN": "颜色和质地是该类别的典型描述，不是从照片中测量得到的。",
+      "zh-TW": "顏色和質地是該類別的典型描述，不是從照片中測量得到的。",
+      "en": "Colour and texture are typical descriptions for this category, not measurements taken from the photo.",
+      "pt": "A cor e a textura são descrições típicas desta categoria, não medições feitas a partir da foto."
+    }
+  },
+  "sources": {
+    "cornell_constipation": {
+      "name": "Cornell Feline Health Center — Constipation",
+      "url": "https://www.vet.cornell.edu/departments-centers-and-institutes/cornell-feline-health-center/health-information/feline-health-topics/constipation"
+    },
+    "vca_constipation": {
+      "name": "VCA Animal Hospitals — Constipation in Cats",
+      "url": "https://vcahospitals.com/know-your-pet/constipation-in-cats"
+    },
+    "msd_constipation": {
+      "name": "MSD Veterinary Manual — Constipation, Obstipation and Megacolon",
+      "url": "https://www.msdvetmanual.com/digestive-system/diseases-of-the-large-intestine-in-small-animals/constipation-obstipation-and-megacolon-in-small-animals"
+    },
+    "icatcare_diarrhea": {
+      "name": "iCatCare — Diarrhoea in Cats",
+      "url": "https://icatcare.org/articles/diarrhoea-in-cats"
+    },
+    "vca_diarrhea": {
+      "name": "VCA Animal Hospitals — Diarrhea in Cats",
+      "url": "https://vcahospitals.com/know-your-pet/diarrhea-in-cats"
+    },
+    "cornell_toxins": {
+      "name": "Cornell University Hospital for Animals — Small Animal Toxins",
+      "url": "https://www.vet.cornell.edu/hospitals/pharmacy/consumer-clinical-care-guidelines-animals/small-animal-toxins"
+    },
+    "illinois_meds": {
+      "name": "University of Illinois — Human Medications Not for Pets",
+      "url": "https://vetmed.illinois.edu/pet-health-columns/keep-human-medications-away-from-pets/"
+    },
+    "cornell_anorexia": {
+      "name": "Cornell Feline Health Center — Anorexia",
+      "url": "https://www.vet.cornell.edu/departments-centers-and-institutes/cornell-feline-health-center/health-information/feline-health-topics/anorexia"
+    },
+    "vca_vomiting": {
+      "name": "VCA Animal Hospitals — Vomiting in Cats",
+      "url": "https://vcahospitals.com/know-your-pet/vomiting-in-cats"
+    },
+    "cornell_flutd": {
+      "name": "Cornell Feline Health Center — Feline Lower Urinary Tract Disease",
+      "url": "https://www.vet.cornell.edu/departments-centers-and-institutes/cornell-feline-health-center/health-information/feline-health-topics/feline-lower-urinary-tract-disease"
+    }
+  },
+  "profiles": {
+    "0": {
+      "key": "constipation",
+      "class_ids": [
+        0
+      ],
+      "name": {
+        "zh-CN": "便秘／干硬便便",
+        "zh-TW": "便秘／乾硬便便",
+        "en": "Constipation / hard stool",
+        "pt": "Prisão de ventre / fezes duras"
+      },
+      "texture": {
+        "zh-CN": "干硬、颗粒状，表面可能干裂",
+        "zh-TW": "乾硬、顆粒狀，表面可能乾裂",
+        "en": "Hard, dry and pellet-like; the surface may be cracked",
+        "pt": "Fezes duras, secas e em pequenas bolas; a superfície pode estar rachada"
+      },
+      "color": {
+        "zh-CN": "深褐色至黑褐色（颜色不是唯一判断依据）",
+        "zh-TW": "深褐色至黑褐色（顏色不是唯一判斷依據）",
+        "en": "Dark brown to almost black (colour alone is not diagnostic)",
+        "pt": "Castanho-escuro a quase preto (a cor isolada não é diagnóstica)"
+      },
+      "color_hex": "#4A2C1A",
+      "shape": {
+        "zh-CN": "小颗粒、硬块或干硬短段",
+        "zh-TW": "小顆粒、硬塊或乾硬短段",
+        "en": "Small pellets, hard lumps or short dry pieces",
+        "pt": "Pequenas bolas, caroços duros ou fragmentos secos e curtos"
+      },
+      "water": {
+        "zh-CN": "含水量低",
+        "zh-TW": "含水量低",
+        "en": "Low water content",
+        "pt": "Baixo teor de água"
+      },
+      "risk_label": {
+        "zh-CN": "需要关注",
+        "zh-TW": "需要關注",
+        "en": "Needs attention",
+        "pt": "Requer atenção"
+      },
+      "causes": {
+        "zh-CN": [
+          "饮水不足或只吃干粮",
+          "膳食纤维过多或过少",
+          "毛球、异物或肠道阻塞",
+          "肥胖、缺乏运动或猫砂盆压力",
+          "肾脏／代谢问题或骨盆狭窄"
+        ],
+        "zh-TW": [
+          "飲水不足或只吃乾糧",
+          "膳食纖維過多或過少",
+          "毛球、異物或腸道阻塞",
+          "肥胖、缺乏運動或貓砂盆壓力",
+          "腎臟／代謝問題或骨盆狹窄"
+        ],
+        "en": [
+          "Not enough water or a dry-food-only diet",
+          "Too much or too little dietary fibre",
+          "Hairballs, foreign objects or intestinal blockage",
+          "Obesity, inactivity or litter-box stress",
+          "Kidney/metabolic disease or a narrow pelvis"
+        ],
+        "pt": [
+          "Pouca água ou dieta apenas de comida seca",
+          "Fibra alimentar a mais ou a menos",
+          "Bolas de pelo, corpos estranhos ou obstrução intestinal",
+          "Obesidade, inatividade ou stress com a areia",
+          "Doença renal/metabólica ou pélvis estreita"
+        ]
+      },
+      "urgency": {
+        "zh-CN": "建议 24–72 小时内就医；若呕吐、精神差或腹胀则尽快",
+        "zh-TW": "建議 24–72 小時內就醫；若嘔吐、精神差或腹脹則盡快",
+        "en": "See a vet within 24–72 hours; urgently if there is vomiting, lethargy or a bloated abdomen",
+        "pt": "Consulte um veterinário em 24–72 horas; com urgência se houver vómitos, apatia ou abdómen distendido"
+      },
+      "vet_advice": {
+        "zh-CN": "若超过 2–3 天未排便、频繁蹲猫砂盆却拉不出、呕吐、精神差或腹部胀痛，请尽快就医。公猫频繁蹲砂盆但尿不出来属于尿闭急症，应立即急诊。",
+        "zh-TW": "若超過 2–3 天未排便、頻繁蹲貓砂盆卻拉不出、嘔吐、精神差或腹部脹痛，請盡快就醫。公貓頻繁蹲砂盆但尿不出來屬於尿閉急症，應立即急診。",
+        "en": "See a vet promptly if there has been no stool for 2–3 days, your cat keeps straining without producing stool, or there is vomiting, lethargy or abdominal pain. A male cat straining with little or no urine has a urinary obstruction — an emergency.",
+        "pt": "Consulte rapidamente se não houver fezes durante 2–3 dias, se o gato fizer força sem produzir fezes, ou se houver vómitos, apatia ou dor abdominal. Um gato macho a fazer força com pouca ou nenhuma urina tem uma obstrução urinária — uma emergência."
+      },
+      "care": {
+        "zh-CN": "可先增加饮水（多水碗、流动饮水机、湿粮），保持猫砂盆清洁；不要自行灌肠或使用人用泻药。",
+        "zh-TW": "可先增加飲水（多水碗、流動飲水機、濕糧），保持貓砂盆清潔；不要自行灌腸或使用人用瀉藥。",
+        "en": "Increase water intake (more bowls, a fountain, wet food) and keep the litter box clean. Do not give enemas or human laxatives.",
+        "pt": "Aumente a ingestão de água (mais tigelas, fonte, comida húmida) e mantenha a areia limpa. Não faça enemas nem dê laxantes humanos."
+      },
+      "prevention": {
+        "zh-CN": "增加湿粮和饮水、定期梳毛、控制体重、保持活动和猫砂盆清洁，并按兽医建议体检。",
+        "zh-TW": "增加濕糧和飲水、定期梳毛、控制體重、保持活動和貓砂盆清潔，並按獸醫建議體檢。",
+        "en": "Increase wet food and water, brush regularly, maintain a healthy weight, encourage activity, keep the litter box clean and follow your vet’s check-up schedule.",
+        "pt": "Aumente a comida húmida e a água, escove regularmente, mantenha um peso saudável, incentive a atividade, mantenha a areia limpa e siga o plano de consultas do veterinário."
+      },
+      "sources": [
+        "cornell_constipation",
+        "vca_constipation",
+        "msd_constipation",
+        "cornell_toxins",
+        "illinois_meds"
+      ]
+    },
+    "1": {
+      "key": "diarrhea",
+      "class_ids": [
+        1
+      ],
+      "name": {
+        "zh-CN": "拉稀",
+        "zh-TW": "拉稀",
+        "en": "Diarrhoea",
+        "pt": "Diarreia"
+      },
+      "texture": {
+        "zh-CN": "水样、稀烂或不成形",
+        "zh-TW": "水樣、稀爛或不成形",
+        "en": "Watery, loose or unformed",
+        "pt": "Aquoso, mole ou sem forma"
+      },
+      "color": {
+        "zh-CN": "黄褐色、黄色或绿色，可能带黏液或血",
+        "zh-TW": "黃褐色、黃色或綠色，可能帶黏液或血",
+        "en": "Yellow-brown, yellow or green; may contain mucus or blood",
+        "pt": "Castanho-amarelado, amarelo ou verde; pode conter muco ou sangue"
+      },
+      "color_hex": "#B8860B",
+      "shape": {
+        "zh-CN": "糊状、水样或喷射状",
+        "zh-TW": "糊狀、水樣或噴射狀",
+        "en": "Mushy, watery or squirt-like",
+        "pt": "Pastoso, aquoso ou em jato"
+      },
+      "water": {
+        "zh-CN": "含水量高",
+        "zh-TW": "含水量高",
+        "en": "High water content",
+        "pt": "Alto teor de água"
+      },
+      "risk_label": {
+        "zh-CN": "较高风险",
+        "zh-TW": "較高風險",
+        "en": "Higher risk",
+        "pt": "Risco elevado"
+      },
+      "causes": {
+        "zh-CN": [
+          "突然换粮或吃到变质食物",
+          "寄生虫（球虫、贾第虫等）",
+          "细菌或病毒感染",
+          "应激、食物过敏或炎症性肠病",
+          "毒素、异物或药物反应"
+        ],
+        "zh-TW": [
+          "突然換糧或吃到變質食物",
+          "寄生蟲（球蟲、賈第蟲等）",
+          "細菌或病毒感染",
+          "應激、食物過敏或炎症性腸病",
+          "毒素、異物或藥物反應"
+        ],
+        "en": [
+          "Sudden food change or spoiled food",
+          "Parasites (coccidia, Giardia, etc.)",
+          "Bacterial or viral infection",
+          "Stress, food allergy or inflammatory bowel disease",
+          "Toxins, foreign objects or medication reactions"
+        ],
+        "pt": [
+          "Mudança súbita de comida ou comida estragada",
+          "Parasitas (coccídios, Giardia, etc.)",
+          "Infeção bacteriana ou viral",
+          "Stress, alergia alimentar ou doença inflamatória intestinal",
+          "Toxinas, corpos estranhos ou reações a medicamentos"
+        ]
+      },
+      "urgency": {
+        "zh-CN": "持续超过 24–48 小时，或伴随呕吐、精神差时请就医；幼猫／老猫更早就医",
+        "zh-TW": "持續超過 24–48 小時，或伴隨嘔吐、精神差時請就醫；幼貓／老貓更早就醫",
+        "en": "See a vet if diarrhoea lasts more than 24–48 hours or is accompanied by vomiting or lethargy; kittens and senior cats sooner",
+        "pt": "Consulte um veterinário se a diarreia durar mais de 24–48 horas ou vier com vómitos ou apatia; gatinhos e gatos idosos mais cedo"
+      },
+      "vet_advice": {
+        "zh-CN": "记录腹泻次数、颜色和是否带血，注意补水。若腹泻超过 24–48 小时、带血或黑便、反复呕吐、精神差、拒食，或幼猫／老猫，请尽快就医。",
+        "zh-TW": "記錄腹瀉次數、顏色和是否帶血，注意補水。若腹瀉超過 24–48 小時、帶血或黑便、反覆嘔吐、精神差、拒食，或幼貓／老貓，請盡快就醫。",
+        "en": "Note the frequency, colour and any blood, and support hydration. See a vet promptly if diarrhoea lasts more than 24–48 hours, contains blood or black stool, or is accompanied by repeated vomiting, lethargy, refusal to eat, or in a kitten or senior cat.",
+        "pt": "Registe a frequência, a cor e a presença de sangue, e apoie a hidratação. Consulte rapidamente um veterinário se a diarreia durar mais de 24–48 horas, tiver sangue ou fezes pretas, ou vier com vómitos repetidos, apatia, recusa alimentar, ou num gatinho ou gato idoso."
+      },
+      "care": {
+        "zh-CN": "提供清水，少量多餐、易消化食物；不要自行禁食幼猫，也不要使用人用止泻药。",
+        "zh-TW": "提供清水，少量多餐、易消化食物；不要自行禁食幼貓，也不要使用人用止瀉藥。",
+        "en": "Offer fresh water and small, frequent meals of easily digestible food. Do not fast a kitten or use human anti-diarrhoeal medicine.",
+        "pt": "Ofereça água fresca e refeições pequenas e frequentes de comida fácil de digerir. Não deixe um gatinho em jejum nem use antidiarreicos humanos."
+      },
+      "prevention": {
+        "zh-CN": "7–10 天渐进换粮、定期驱虫、避免人类食物和变质食物、减少应激、保持猫砂盆清洁。",
+        "zh-TW": "7–10 天漸進換糧、定期驅蟲、避免人類食物和變質食物、減少應激、保持貓砂盆清潔。",
+        "en": "Transition food over 7–10 days, deworm regularly, avoid human and spoiled food, reduce stress and keep the litter box clean.",
+        "pt": "Faça a transição da comida ao longo de 7–10 dias, desparasite regularmente, evite comida humana e estragada, reduza o stress e mantenha a areia limpa."
+      },
+      "sources": [
+        "icatcare_diarrhea",
+        "vca_diarrhea",
+        "cornell_toxins",
+        "illinois_meds"
+      ]
+    },
+    "2": {
+      "key": "normal",
+      "class_ids": [
+        2
+      ],
+      "name": {
+        "zh-CN": "正常",
+        "zh-TW": "正常",
+        "en": "Normal",
+        "pt": "Normal"
+      },
+      "texture": {
+        "zh-CN": "成型、柔软但有弹性，像面团",
+        "zh-TW": "成型、柔軟但有彈性，像麵團",
+        "en": "Formed, soft but pliable, like playdough",
+        "pt": "Formadas, macias mas maleáveis, como massa"
+      },
+      "color": {
+        "zh-CN": "中至深褐色",
+        "zh-TW": "中至深褐色",
+        "en": "Medium to dark brown",
+        "pt": "Castanho médio a escuro"
+      },
+      "color_hex": "#6B4423",
+      "shape": {
+        "zh-CN": "香肠状／条状，表面光滑",
+        "zh-TW": "香腸狀／條狀，表面光滑",
+        "en": "Sausage-shaped, with a smooth surface",
+        "pt": "Em forma de salsicha, com superfície lisa"
+      },
+      "water": {
+        "zh-CN": "含水量正常",
+        "zh-TW": "含水量正常",
+        "en": "Normal water content",
+        "pt": "Teor de água normal"
+      },
+      "risk_label": {
+        "zh-CN": "低风险",
+        "zh-TW": "低風險",
+        "en": "Low risk",
+        "pt": "Risco baixo"
+      },
+      "causes": {
+        "zh-CN": [
+          "饮食和个体差异（颜色会随食物略有变化）"
+        ],
+        "zh-TW": [
+          "飲食和個體差異（顏色會隨食物略有變化）"
+        ],
+        "en": [
+          "Diet and individual variation (colour may change slightly with food)"
+        ],
+        "pt": [
+          "Dieta e variação individual (a cor pode mudar ligeiramente com a comida)"
+        ]
+      },
+      "urgency": {
+        "zh-CN": "通常无需就医；持续变化或伴随症状时咨询兽医",
+        "zh-TW": "通常無需就醫；持續變化或伴隨症狀時諮詢獸醫",
+        "en": "Usually no vet visit is needed; consult a vet if the change persists or other signs appear",
+        "pt": "Normalmente não é necessária consulta; consulte se a alteração persistir ou surgirem outros sinais"
+      },
+      "vet_advice": {
+        "zh-CN": "继续保持当前饮食和生活方式；若颜色、频率或质地持续改变，或出现呕吐、精神差、体重下降，请咨询兽医。",
+        "zh-TW": "繼續保持目前飲食和生活方式；若顏色、頻率或質地持續改變，或出現嘔吐、精神差、體重下降，請諮詢獸醫。",
+        "en": "Keep the current diet and lifestyle. Consult a vet if colour, frequency or texture changes persist, or if there is vomiting, lethargy or weight loss.",
+        "pt": "Mantenha a dieta e o estilo de vida atuais. Consulte um veterinário se as alterações de cor, frequência ou textura persistirem, ou se houver vómitos, apatia ou perda de peso."
+      },
+      "care": {
+        "zh-CN": "保持充足饮水、均衡饮食和规律排便；定期观察猫砂盆。",
+        "zh-TW": "保持充足飲水、均衡飲食和規律排便；定期觀察貓砂盆。",
+        "en": "Keep fresh water available, feed a balanced diet and observe the litter box regularly.",
+        "pt": "Mantenha água fresca disponível, ofereça uma dieta equilibrada e observe a areia regularmente."
+      },
+      "prevention": {
+        "zh-CN": "均衡饮食、充足饮水、定期体检和驱虫。",
+        "zh-TW": "均衡飲食、充足飲水、定期體檢和驅蟲。",
+        "en": "A balanced diet, plenty of water, regular check-ups and parasite control.",
+        "pt": "Dieta equilibrada, bastante água, consultas regulares e controlo de parasitas."
+      },
+      "sources": [
+        "icatcare_diarrhea",
+        "vca_diarrhea",
+        "cornell_toxins",
+        "illinois_meds"
+      ]
+    },
+    "3": {
+      "key": "no_waste",
+      "class_ids": [
+        3
+      ],
+      "name": {
+        "zh-CN": "未检测到排泄物",
+        "zh-TW": "未檢測到排泄物",
+        "en": "No waste detected",
+        "pt": "Não foram detetados dejetos"
+      },
+      "texture": {
+        "zh-CN": "未识别到排泄物",
+        "zh-TW": "未識別到排泄物",
+        "en": "No waste recognised",
+        "pt": "Não foram reconhecidos dejetos"
+      },
+      "color": {
+        "zh-CN": "—",
+        "zh-TW": "—",
+        "en": "—",
+        "pt": "—"
+      },
+      "color_hex": "#808080",
+      "shape": {
+        "zh-CN": "—",
+        "zh-TW": "—",
+        "en": "—",
+        "pt": "—"
+      },
+      "water": {
+        "zh-CN": "—",
+        "zh-TW": "—",
+        "en": "—",
+        "pt": "—"
+      },
+      "risk_label": {
+        "zh-CN": "无法判断",
+        "zh-TW": "無法判斷",
+        "en": "Cannot assess",
+        "pt": "Não é possível avaliar"
+      },
+      "causes": {
+        "zh-CN": [
+          "图片中没有清晰粪便",
+          "光线不足、模糊或角度不佳",
+          "粪便被猫砂覆盖"
+        ],
+        "zh-TW": [
+          "圖片中沒有清晰糞便",
+          "光線不足、模糊或角度不佳",
+          "糞便被貓砂覆蓋"
+        ],
+        "en": [
+          "No clear waste in the photo",
+          "Poor lighting, blur or an awkward angle",
+          "Waste covered by litter"
+        ],
+        "pt": [
+          "Não há dejetos claros na foto",
+          "Pouca luz, desfoque ou ângulo inadequado",
+          "Dejetos cobertos pela areia"
+        ]
+      },
+      "urgency": {
+        "zh-CN": "请重新拍摄；若猫咪本身有症状，请直接咨询兽医",
+        "zh-TW": "請重新拍攝；若貓咪本身有症狀，請直接諮詢獸醫",
+        "en": "Retake the photo; if your cat has symptoms, contact a vet directly",
+        "pt": "Tire outra foto; se o gato tiver sintomas, contacte diretamente um veterinário"
+      },
+      "vet_advice": {
+        "zh-CN": "请重新拍摄清晰、光线充足、粪便位于画面中央的照片。若猫咪出现呕吐、腹泻、便秘、精神差或拒食，不要只依赖图片分析，请咨询兽医。",
+        "zh-TW": "請重新拍攝清晰、光線充足、糞便位於畫面中央的照片。若貓咪出現嘔吐、腹瀉、便秘、精神差或拒食，不要只依賴圖片分析，請諮詢獸醫。",
+        "en": "Retake a clear, well-lit photo with the stool centred in the frame. If your cat has vomiting, diarrhoea, constipation, lethargy or refuses food, do not rely on the photo analysis alone—consult a vet.",
+        "pt": "Tire uma foto nítida e bem iluminada, com as fezes centradas. Se o gato tiver vómitos, diarreia, prisão de ventre, apatia ou recusar comida, não dependa apenas da análise da foto — consulte um veterinário."
+      },
+      "care": {
+        "zh-CN": "拍摄前清理杂物，确保画面主体清晰。",
+        "zh-TW": "拍攝前清理雜物，確保畫面主體清晰。",
+        "en": "Clear clutter before taking the photo and make sure the stool is the main subject.",
+        "pt": "Retire objetos antes de tirar a foto e certifique-se de que as fezes são o elemento principal."
+      },
+      "prevention": {
+        "zh-CN": "定期观察排便；保存异常照片并记录频率。",
+        "zh-TW": "定期觀察排便；保存異常照片並記錄頻率。",
+        "en": "Observe the litter box regularly; save photos of abnormal stool and record how often it happens.",
+        "pt": "Observe a areia regularmente; guarde fotos de fezes anormais e registe a frequência."
+      },
+      "sources": [
+        "vca_diarrhea",
+        "cornell_toxins",
+        "illinois_meds"
+      ]
+    },
+    "4": {
+      "key": "soft_stool",
+      "class_ids": [
+        4
+      ],
+      "name": {
+        "zh-CN": "软便",
+        "zh-TW": "軟便",
+        "en": "Soft stool",
+        "pt": "Fezes moles"
+      },
+      "texture": {
+        "zh-CN": "偏软、糊状或成形但不坚实",
+        "zh-TW": "偏軟、糊狀或成形但不堅實",
+        "en": "Soft, mushy or formed but not firm",
+        "pt": "Macias, pastosas ou formadas mas não firmes"
+      },
+      "color": {
+        "zh-CN": "黄褐色至浅褐色，可能带黏液",
+        "zh-TW": "黃褐色至淺褐色，可能帶黏液",
+        "en": "Yellow-brown to light brown; may contain mucus",
+        "pt": "Castanho-amarelado a castanho-claro; pode conter muco"
+      },
+      "color_hex": "#A0784A",
+      "shape": {
+        "zh-CN": "软条状、堆积状或部分不成形",
+        "zh-TW": "軟條狀、堆積狀或部分不成形",
+        "en": "Soft logs, piles or partially unformed",
+        "pt": "Forma mole, em monte ou parcialmente sem forma"
+      },
+      "water": {
+        "zh-CN": "含水量偏高",
+        "zh-TW": "含水量偏高",
+        "en": "Higher water content",
+        "pt": "Teor de água elevado"
+      },
+      "risk_label": {
+        "zh-CN": "轻度关注",
+        "zh-TW": "輕度關注",
+        "en": "Mild concern",
+        "pt": "Preocupação ligeira"
+      },
+      "causes": {
+        "zh-CN": [
+          "突然换粮或饮食不当",
+          "食物不耐受或过敏",
+          "轻度肠道菌群失衡",
+          "应激或环境变化",
+          "早期寄生虫感染"
+        ],
+        "zh-TW": [
+          "突然換糧或飲食不當",
+          "食物不耐受或過敏",
+          "輕度腸道菌群失衡",
+          "應激或環境變化",
+          "早期寄生蟲感染"
+        ],
+        "en": [
+          "Sudden food change or inappropriate food",
+          "Food intolerance or allergy",
+          "Mild imbalance of gut bacteria",
+          "Stress or environmental change",
+          "Early parasite infection"
+        ],
+        "pt": [
+          "Mudança súbita de comida ou alimentação inadequada",
+          "Intolerância ou alergia alimentar",
+          "Desequilíbrio ligeiro da flora intestinal",
+          "Stress ou mudança de ambiente",
+          "Infeção parasitária inicial"
+        ]
+      },
+      "urgency": {
+        "zh-CN": "观察 24–48 小时；持续超过 2–3 天或伴随其他症状请就医",
+        "zh-TW": "觀察 24–48 小時；持續超過 2–3 天或伴隨其他症狀請就醫",
+        "en": "Monitor for 24–48 hours; see a vet if it lasts more than 2–3 days or other signs appear",
+        "pt": "Observe durante 24–48 horas; consulte se durar mais de 2–3 dias ou surgirem outros sinais"
+      },
+      "vet_advice": {
+        "zh-CN": "先观察并记录，保持饮水；若软便持续超过 2–3 天、带血或黏液、反复呕吐、精神差或体重下降，请就医。幼猫／老猫更早就医。",
+        "zh-TW": "先觀察並記錄，保持飲水；若軟便持續超過 2–3 天、帶血或黏液、反覆嘔吐、精神差或體重下降，請就醫。幼貓／老貓更早就醫。",
+        "en": "Observe and keep notes, and ensure fresh water. See a vet if soft stool lasts more than 2–3 days, contains blood or mucus, or is accompanied by repeated vomiting, lethargy or weight loss. Kittens and senior cats sooner.",
+        "pt": "Observe e registe, e garanta água fresca. Consulte um veterinário se as fezes moles durarem mais de 2–3 dias, tiverem sangue ou muco, ou vierem com vómitos repetidos, apatia ou perda de peso. Gatinhos e gatos idosos mais cedo."
+      },
+      "care": {
+        "zh-CN": "少量多餐、易消化饮食，可咨询兽医是否适合益生菌；不要自行用药。",
+        "zh-TW": "少量多餐、易消化飲食，可諮詢獸醫是否適合益生菌；不要自行用藥。",
+        "en": "Offer small, frequent meals of easily digestible food. Ask your vet before using probiotics; do not self-medicate.",
+        "pt": "Ofereça refeições pequenas e frequentes de comida fácil de digerir. Pergunte ao veterinário antes de usar probióticos; não se automedique."
+      },
+      "prevention": {
+        "zh-CN": "渐进换粮、避免人类食物、定期驱虫、减少应激、保持猫砂盆清洁。",
+        "zh-TW": "漸進換糧、避免人類食物、定期驅蟲、減少應激、保持貓砂盆清潔。",
+        "en": "Transition food gradually, avoid human food, deworm regularly, reduce stress and keep the litter box clean.",
+        "pt": "Faça a transição gradual da comida, evite comida humana, desparasite regularmente, reduza o stress e mantenha a areia limpa."
+      },
+      "sources": [
+        "icatcare_diarrhea",
+        "vca_diarrhea",
+        "cornell_toxins",
+        "illinois_meds"
+      ]
+    }
+  }
+}

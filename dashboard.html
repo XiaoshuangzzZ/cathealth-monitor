@@ -744,6 +744,194 @@
             font-size: 0.9rem;
         }
 
+        /* 糞便詳細資料 */
+        .stool-details {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .stool-detail-card {
+            background: #fff;
+            border: 1px solid var(--primary-light);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stool-detail-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .stool-detail-title i {
+            color: var(--primary);
+        }
+
+        .stool-type-badge {
+            margin-left: auto;
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--primary-light);
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .stool-typical-note {
+            font-size: 0.78rem;
+            color: var(--gray);
+            line-height: 1.5;
+            margin: 0 0 12px;
+        }
+
+        .stool-facts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .stool-fact {
+            background: var(--light-bg);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stool-fact span {
+            font-size: 0.72rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .stool-fact strong {
+            color: var(--dark);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .stool-color-chip {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .stool-list {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--dark);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .stool-list li {
+            margin-bottom: 4px;
+        }
+
+        .stool-urgency {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #fff7e0;
+            color: #8a5a00;
+            font-size: 0.85rem;
+        }
+
+        .stool-detail-card p {
+            color: var(--dark);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin: 0 0 10px;
+        }
+
+        .stool-detail-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        .stool-red-flags {
+            background: #fdecea;
+            border-left: 4px solid #dc3545;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 12px;
+        }
+
+        .stool-red-flags > strong {
+            display: block;
+            color: #a71d2a;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .stool-red-flags .stool-list {
+            color: #7a1a22;
+        }
+
+        .stool-med-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #664d03;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+
+        .stool-med-warning strong {
+            color: #7a5a00;
+        }
+
+        .stool-sources {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 6px 12px;
+            font-size: 0.78rem;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .stool-sources strong {
+            color: var(--dark);
+        }
+
+        .stool-sources a {
+            color: var(--accent);
+            text-decoration: underline;
+            word-break: break-word;
+        }
+
+        @media (max-width: 480px) {
+            .stool-fact {
+                padding: 9px 10px;
+            }
+
+            .stool-type-badge {
+                display: none;
+            }
+        }
+
         .image-preview {
             max-width: 400px;
             margin: 20px auto;
@@ -2929,7 +3117,8 @@ async function handleImageUpload(file) {
                     "Authorization": "Bearer " + token
                 },
                 body: JSON.stringify({
-                    image: imageData
+                    image: imageData,
+                    language: I18n.getLanguage()
                 }),
                 signal: controller.signal
             });
@@ -2989,6 +3178,89 @@ async function handleImageUpload(file) {
 
 
 // 显示分析结果
+// 渲染糞便的詳細特徵、就醫與用藥安全資料（內容已由後端依語言回傳）
+function renderStoolProfile(profile) {
+    if (!profile || typeof profile !== "object") return "";
+
+    const t = (key) => I18n.t(key);
+    const safeList = (items) => {
+        if (!Array.isArray(items) || items.length === 0) return "";
+        return '<ul class="stool-list">' + items.map(item => `<li>${esc(item)}</li>`).join("") + "</ul>";
+    };
+    const safeUrl = (url) => /^https?:\/\//i.test(String(url || "")) ? esc(url) : "#";
+    const colorHex = /^#[0-9a-fA-F]{3,8}$/.test(String(profile.color_hex || "")) ? profile.color_hex : "#999999";
+
+    const facts = [
+        [t("质地"), profile.texture],
+        [t("颜色"), profile.color],
+        [t("形状"), profile.shape],
+        [t("含水量"), profile.water],
+        [t("风险等级"), profile.risk_label]
+    ].filter(item => item[1]);
+
+    const factHtml = facts.map(([label, value]) => {
+        const chip = label === t("颜色")
+            ? `<span class="stool-color-chip" style="background:${colorHex};"></span>`
+            : "";
+        return `<div class="stool-fact"><span>${esc(label)}</span><strong>${chip}${esc(value)}</strong></div>`;
+    }).join("");
+
+    const sources = Array.isArray(profile.sources) ? profile.sources : [];
+    const sourceHtml = sources.length
+        ? `<div class="stool-sources"><strong>${esc(t("参考资料"))}</strong>${sources.map(source =>
+            `<a href="${safeUrl(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.name || source.url || "")}</a>`
+        ).join("")}</div>`
+        : "";
+
+    return `
+        <div class="stool-details" data-i18n-skip>
+            <div class="stool-detail-card">
+                <div class="stool-detail-title">
+                    <i class="fas fa-diagnoses"></i> ${esc(t("粪便特征"))}
+                    ${profile.name ? `<span class="stool-type-badge">${esc(profile.name)}</span>` : ""}
+                </div>
+                ${profile.typical_note ? `<p class="stool-typical-note">${esc(profile.typical_note)}</p>` : ""}
+                <div class="stool-facts">${factHtml}</div>
+            </div>
+
+            ${Array.isArray(profile.causes) && profile.causes.length ? `
+                <div class="stool-detail-card">
+                    <div class="stool-detail-title"><i class="fas fa-search"></i> ${esc(t("可能原因"))}</div>
+                    ${safeList(profile.causes)}
+                </div>` : ""}
+
+            <div class="stool-detail-card">
+                <div class="stool-detail-title"><i class="fas fa-user-md"></i> ${esc(t("就医建议"))}</div>
+                ${profile.urgency ? `<div class="stool-urgency"><span>${esc(t("紧急程度"))}</span><strong>${esc(profile.urgency)}</strong></div>` : ""}
+                ${profile.vet_advice ? `<p>${esc(profile.vet_advice)}</p>` : ""}
+                ${Array.isArray(profile.red_flags) && profile.red_flags.length ? `
+                    <div class="stool-red-flags">
+                        <strong>${esc(t("需要立即就医的情况"))}</strong>
+                        ${safeList(profile.red_flags)}
+                    </div>` : ""}
+            </div>
+
+            <div class="stool-detail-card">
+                <div class="stool-detail-title"><i class="fas fa-pills"></i> ${esc(t("用药与护理"))}</div>
+                ${profile.care ? `<p>${esc(profile.care)}</p>` : ""}
+                ${profile.medication_warning ? `
+                    <div class="stool-med-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>${esc(t("用药提醒"))}</strong><br>${esc(profile.medication_warning)}
+                    </div>` : ""}
+            </div>
+
+            ${profile.prevention ? `
+                <div class="stool-detail-card">
+                    <div class="stool-detail-title"><i class="fas fa-shield-alt"></i> ${esc(t("预防建议"))}</div>
+                    <p>${esc(profile.prevention)}</p>
+                </div>` : ""}
+
+            ${sourceHtml}
+        </div>
+    `;
+}
+
 function showAnalysisResult(result) {
     const detectionResults = document.getElementById("detection-results");
     const uploadArea = document.getElementById("upload-area");
@@ -3037,7 +3309,9 @@ function showAnalysisResult(result) {
                 <div class="result-label">治愈概率</div>
             </div>
         </div>
-        
+
+        ${renderStoolProfile(result.stool_profile)}
+
         <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid ${result.risk_metrics.color}; margin: 20px 0;">
             <h4 style="margin-bottom: 10px; color: #155724;">
                 <i class="fas fa-stethoscope"></i> 检测特征
@@ -4246,7 +4520,7 @@ function ensureNoDuplicatePages() {
                     <div class="settings-card">
                         <div class="settings-row">
                             <div class="settings-label">应用版本</div>
-                            <div class="settings-value">v1.0.0</div>
+                            <div class="settings-value">v2.0</div>
                         </div>
                         <div class="settings-row">
                             <div class="settings-label">AI 模型</div>
