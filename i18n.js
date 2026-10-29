@@ -82,7 +82,7 @@
         '健康状态': { tw: '健康狀態', en: 'Health Status', pt: 'Estado de saúde' },
         '置信度': { tw: '置信度', en: 'Confidence', pt: 'Confiança' },
         '风险等级': { tw: '風險等級', en: 'Risk Level', pt: 'Nível de risco' },
-        '治愈概率': { tw: '治癒概率', en: 'Recovery Probability', pt: 'Probabilidade de recuperação' },
+        '治愈概率': { tw: '治癒概率', en: 'Cure Rate', pt: 'Taxa de cura' },
         '检测特征': { tw: '檢測特徵', en: 'Detection Features', pt: 'Características detetadas' },
         '健康建议': { tw: '健康建議', en: 'Health Advice', pt: 'Conselhos de saúde' },
         '粪便特征': { tw: '糞便特徵', en: 'Stool Characteristics', pt: 'Características das fezes' },

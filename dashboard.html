@@ -744,89 +744,160 @@
             font-size: 0.9rem;
         }
 
-        /* 糞便詳細資料 */
-        .stool-details {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin: 20px 0;
-        }
-
-        .stool-detail-card {
+        /* 糞便分析結果（移動端優先） */
+        .stool-result-card {
             background: #fff;
             border: 1px solid var(--primary-light);
-            border-radius: 14px;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 18px 0;
+            box-shadow: 0 3px 14px rgba(92, 75, 55, 0.06);
+        }
+
+        .stool-summary {
             padding: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.18), rgba(168, 200, 184, 0.14));
         }
 
-        .stool-detail-title {
+        .stool-summary-head {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 10px;
-            font-size: 1rem;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
         }
 
-        .stool-detail-title i {
-            color: var(--primary);
-        }
-
-        .stool-type-badge {
-            margin-left: auto;
-            background: var(--light);
-            color: var(--dark);
-            border: 1px solid var(--primary-light);
-            border-radius: 999px;
-            padding: 3px 10px;
-            font-size: 0.75rem;
+        .stool-summary-kicker {
+            font-size: 0.68rem;
             font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--gray);
+        }
+
+        .stool-summary-title {
+            margin: 3px 0 0;
+            font-size: 1.2rem;
+            line-height: 1.3;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .stool-risk-badge {
+            flex-shrink: 0;
+            border: 1px solid var(--primary);
+            color: var(--dark);
+            background: rgba(255, 255, 255, 0.65);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
             white-space: nowrap;
         }
 
-        .stool-typical-note {
-            font-size: 0.78rem;
+        .stool-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .stool-metric {
+            background: rgba(255, 255, 255, 0.78);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            min-width: 0;
+        }
+
+        .stool-metric span {
+            display: block;
+            font-size: 0.66rem;
+            line-height: 1.3;
             color: var(--gray);
+        }
+
+        .stool-metric strong {
+            display: block;
+            margin-top: 3px;
+            font-size: 1rem;
+            line-height: 1.2;
+            color: var(--dark);
+        }
+
+        .stool-typical-note {
+            margin: 10px 0 0;
+            font-size: 0.72rem;
             line-height: 1.5;
-            margin: 0 0 12px;
+            color: var(--gray);
+        }
+
+        .stool-section {
+            padding: 14px 16px;
+            border-top: 1px solid #f1e9dc;
+        }
+
+        .stool-section-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stool-section-title i {
+            width: 18px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .stool-section p {
+            margin: 0 0 8px;
+            font-size: 0.86rem;
+            line-height: 1.6;
+            color: var(--dark);
+        }
+
+        .stool-section p:last-child {
+            margin-bottom: 0;
         }
 
         .stool-facts {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
         }
 
         .stool-fact {
             background: var(--light-bg);
-            border-radius: 10px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            border-radius: 9px;
+            padding: 8px 10px;
+            min-width: 0;
         }
 
         .stool-fact span {
-            font-size: 0.72rem;
-            color: var(--gray);
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.66rem;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            color: var(--gray);
         }
 
         .stool-fact strong {
-            color: var(--dark);
-            font-size: 0.9rem;
-            line-height: 1.4;
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--dark);
+            font-weight: 600;
         }
 
         .stool-color-chip {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             display: inline-block;
             border: 1px solid rgba(0, 0, 0, 0.15);
@@ -835,37 +906,41 @@
 
         .stool-list {
             margin: 0;
-            padding-left: 20px;
+            padding-left: 18px;
             color: var(--dark);
-            font-size: 0.88rem;
+            font-size: 0.84rem;
             line-height: 1.6;
         }
 
         .stool-list li {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .stool-urgency {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: block;
             margin-bottom: 10px;
             padding: 8px 10px;
             border-radius: 8px;
             background: #fff7e0;
             color: #8a5a00;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            line-height: 1.5;
         }
 
-        .stool-detail-card p {
-            color: var(--dark);
-            font-size: 0.88rem;
-            line-height: 1.6;
-            margin: 0 0 10px;
+        .stool-urgency span {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.8;
         }
 
-        .stool-detail-card p:last-child {
-            margin-bottom: 0;
+        .stool-urgency strong {
+            display: block;
+            font-weight: 600;
+            color: #8a5a00;
         }
 
         .stool-red-flags {
@@ -873,14 +948,14 @@
             border-left: 4px solid #dc3545;
             border-radius: 8px;
             padding: 10px 12px;
-            margin-top: 12px;
+            margin-top: 10px;
         }
 
         .stool-red-flags > strong {
             display: block;
             color: #a71d2a;
-            font-size: 0.85rem;
-            margin-bottom: 6px;
+            font-size: 0.82rem;
+            margin-bottom: 5px;
         }
 
         .stool-red-flags .stool-list {
@@ -893,7 +968,7 @@
             border-radius: 8px;
             padding: 10px 12px;
             color: #664d03;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             line-height: 1.6;
             margin-top: 8px;
         }
@@ -903,13 +978,15 @@
         }
 
         .stool-sources {
+            padding: 12px 16px;
+            border-top: 1px solid #f1e9dc;
             display: flex;
             flex-wrap: wrap;
             align-items: baseline;
-            gap: 6px 12px;
-            font-size: 0.78rem;
+            gap: 5px 10px;
+            font-size: 0.72rem;
+            line-height: 1.5;
             color: var(--gray);
-            line-height: 1.6;
         }
 
         .stool-sources strong {
@@ -922,13 +999,31 @@
             word-break: break-word;
         }
 
-        @media (max-width: 480px) {
-            .stool-fact {
-                padding: 9px 10px;
+        @media (min-width: 560px) {
+            .stool-facts {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .analysis-section {
+                padding: 14px;
             }
 
-            .stool-type-badge {
-                display: none;
+            .detection-results {
+                padding: 12px;
+            }
+
+            .stool-summary {
+                padding: 14px;
+            }
+
+            .stool-section {
+                padding: 13px 14px;
+            }
+
+            .stool-summary-title {
+                font-size: 1.1rem;
             }
         }
 
@@ -3178,59 +3273,65 @@ async function handleImageUpload(file) {
 
 
 // 显示分析结果
-// 渲染糞便的詳細特徵、就醫與用藥安全資料（內容已由後端依語言回傳）
-function renderStoolProfile(profile) {
-    if (!profile || typeof profile !== "object") return "";
-
+// 合併摘要與詳細資料，優先適配手機螢幕
+function renderAnalysisDetails(result, healthMessage, healthRecommendation) {
     const t = (key) => I18n.t(key);
+    const profile = result && result.stool_profile && typeof result.stool_profile === "object"
+        ? result.stool_profile
+        : null;
+    const detection = result && result.detection ? result.detection : {};
+    const riskMetrics = result && result.risk_metrics ? result.risk_metrics : {};
+
+    const confidenceNumber = Number(detection.confidence);
+    const confidence = Number.isFinite(confidenceNumber) ? Math.round(confidenceNumber * 100) + "%" : "—";
+    const risk = riskMetrics.risk_level !== undefined && riskMetrics.risk_level !== null ? riskMetrics.risk_level + "%" : "—";
+    const cure = riskMetrics.cure_rate !== undefined && riskMetrics.cure_rate !== null ? riskMetrics.cure_rate + "%" : "—";
+    const riskColor = /^#[0-9a-fA-F]{3,8}$/.test(String(riskMetrics.color || "")) ? riskMetrics.color : "var(--primary)";
+    const title = profile && profile.name ? profile.name : (healthMessage || "");
+    const riskLabel = profile && profile.risk_label ? profile.risk_label : "";
+
     const safeList = (items) => {
         if (!Array.isArray(items) || items.length === 0) return "";
         return '<ul class="stool-list">' + items.map(item => `<li>${esc(item)}</li>`).join("") + "</ul>";
     };
     const safeUrl = (url) => /^https?:\/\//i.test(String(url || "")) ? esc(url) : "#";
-    const colorHex = /^#[0-9a-fA-F]{3,8}$/.test(String(profile.color_hex || "")) ? profile.color_hex : "#999999";
+    const colorHex = /^#[0-9a-fA-F]{3,8}$/.test(String(profile && profile.color_hex || "")) ? profile.color_hex : "#999999";
 
-    const facts = [
-        [t("质地"), profile.texture],
-        [t("颜色"), profile.color],
-        [t("形状"), profile.shape],
-        [t("含水量"), profile.water],
-        [t("风险等级"), profile.risk_label]
-    ].filter(item => item[1]);
+    let sections = "";
 
-    const factHtml = facts.map(([label, value]) => {
-        const chip = label === t("颜色")
-            ? `<span class="stool-color-chip" style="background:${colorHex};"></span>`
-            : "";
-        return `<div class="stool-fact"><span>${esc(label)}</span><strong>${chip}${esc(value)}</strong></div>`;
-    }).join("");
+    if (profile) {
+        const facts = [
+            [t("质地"), profile.texture],
+            [t("颜色"), profile.color],
+            [t("形状"), profile.shape],
+            [t("含水量"), profile.water]
+        ].filter(item => item[1]);
 
-    const sources = Array.isArray(profile.sources) ? profile.sources : [];
-    const sourceHtml = sources.length
-        ? `<div class="stool-sources"><strong>${esc(t("参考资料"))}</strong>${sources.map(source =>
-            `<a href="${safeUrl(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.name || source.url || "")}</a>`
-        ).join("")}</div>`
-        : "";
+        const factHtml = facts.map(([label, value]) => {
+            const chip = label === t("颜色")
+                ? `<span class="stool-color-chip" style="background:${colorHex};"></span>`
+                : "";
+            return `<div class="stool-fact"><span>${esc(label)}</span><strong>${chip}${esc(value)}</strong></div>`;
+        }).join("");
 
-    return `
-        <div class="stool-details" data-i18n-skip>
-            <div class="stool-detail-card">
-                <div class="stool-detail-title">
-                    <i class="fas fa-diagnoses"></i> ${esc(t("粪便特征"))}
-                    ${profile.name ? `<span class="stool-type-badge">${esc(profile.name)}</span>` : ""}
-                </div>
-                ${profile.typical_note ? `<p class="stool-typical-note">${esc(profile.typical_note)}</p>` : ""}
+        sections += `
+            <section class="stool-section">
+                <div class="stool-section-title"><i class="fas fa-diagnoses"></i> ${esc(t("粪便特征"))}</div>
                 <div class="stool-facts">${factHtml}</div>
-            </div>
+                ${profile.typical_note ? `<p class="stool-typical-note">${esc(profile.typical_note)}</p>` : ""}
+            </section>`;
 
-            ${Array.isArray(profile.causes) && profile.causes.length ? `
-                <div class="stool-detail-card">
-                    <div class="stool-detail-title"><i class="fas fa-search"></i> ${esc(t("可能原因"))}</div>
+        if (Array.isArray(profile.causes) && profile.causes.length) {
+            sections += `
+                <section class="stool-section">
+                    <div class="stool-section-title"><i class="fas fa-search"></i> ${esc(t("可能原因"))}</div>
                     ${safeList(profile.causes)}
-                </div>` : ""}
+                </section>`;
+        }
 
-            <div class="stool-detail-card">
-                <div class="stool-detail-title"><i class="fas fa-user-md"></i> ${esc(t("就医建议"))}</div>
+        sections += `
+            <section class="stool-section">
+                <div class="stool-section-title"><i class="fas fa-user-md"></i> ${esc(t("就医建议"))}</div>
                 ${profile.urgency ? `<div class="stool-urgency"><span>${esc(t("紧急程度"))}</span><strong>${esc(profile.urgency)}</strong></div>` : ""}
                 ${profile.vet_advice ? `<p>${esc(profile.vet_advice)}</p>` : ""}
                 ${Array.isArray(profile.red_flags) && profile.red_flags.length ? `
@@ -3238,24 +3339,62 @@ function renderStoolProfile(profile) {
                         <strong>${esc(t("需要立即就医的情况"))}</strong>
                         ${safeList(profile.red_flags)}
                     </div>` : ""}
-            </div>
+            </section>`;
 
-            <div class="stool-detail-card">
-                <div class="stool-detail-title"><i class="fas fa-pills"></i> ${esc(t("用药与护理"))}</div>
+        sections += `
+            <section class="stool-section">
+                <div class="stool-section-title"><i class="fas fa-pills"></i> ${esc(t("用药与护理"))}</div>
                 ${profile.care ? `<p>${esc(profile.care)}</p>` : ""}
                 ${profile.medication_warning ? `
                     <div class="stool-med-warning">
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>${esc(t("用药提醒"))}</strong><br>${esc(profile.medication_warning)}
                     </div>` : ""}
-            </div>
+            </section>`;
 
-            ${profile.prevention ? `
-                <div class="stool-detail-card">
-                    <div class="stool-detail-title"><i class="fas fa-shield-alt"></i> ${esc(t("预防建议"))}</div>
+        if (profile.prevention) {
+            sections += `
+                <section class="stool-section">
+                    <div class="stool-section-title"><i class="fas fa-shield-alt"></i> ${esc(t("预防建议"))}</div>
                     <p>${esc(profile.prevention)}</p>
-                </div>` : ""}
+                </section>`;
+        }
+    } else {
+        sections = `
+            <section class="stool-section">
+                <div class="stool-section-title"><i class="fas fa-stethoscope"></i> ${esc(t("检测特征"))}</div>
+                <p>${formatFeatures(detection.features)}</p>
+            </section>
+            <section class="stool-section">
+                <div class="stool-section-title"><i class="fas fa-heartbeat"></i> ${esc(t("健康建议"))}</div>
+                <p>${esc(healthRecommendation)}</p>
+            </section>`;
+    }
 
+    const sources = profile && Array.isArray(profile.sources) ? profile.sources : [];
+    const sourceHtml = sources.length
+        ? `<div class="stool-sources"><strong>${esc(t("参考资料"))}</strong>${sources.map(source =>
+            `<a href="${safeUrl(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.name || source.url || "")}</a>`
+        ).join("")}</div>`
+        : "";
+
+    return `
+        <div class="stool-result-card" data-i18n-skip>
+            <div class="stool-summary">
+                <div class="stool-summary-head">
+                    <div>
+                        <div class="stool-summary-kicker">${esc(t("AI分析结果"))}</div>
+                        <h3 class="stool-summary-title">${esc(title)}</h3>
+                    </div>
+                    ${riskLabel ? `<span class="stool-risk-badge" style="border-color:${riskColor};color:${riskColor};">${esc(riskLabel)}</span>` : ""}
+                </div>
+                <div class="stool-metrics">
+                    <div class="stool-metric"><span>${esc(t("置信度"))}</span><strong>${esc(confidence)}</strong></div>
+                    <div class="stool-metric"><span>${esc(t("风险等级"))}</span><strong>${esc(risk)}</strong></div>
+                    <div class="stool-metric"><span>${esc(t("治愈概率"))}</span><strong>${esc(cure)}</strong></div>
+                </div>
+            </div>
+            ${sections}
             ${sourceHtml}
         </div>
     `;
@@ -3286,44 +3425,9 @@ function showAnalysisResult(result) {
         </div>` : "";
 
     detectionResults.innerHTML = `
-        <h3 style="margin-bottom: 25px; text-align: center; color: var(--dark);">
-            <i class="fas fa-chart-bar"></i> ${isSimulated ? "分析结果（模拟数据）" : "AI分析结果"}
-        </h3>
         ${simulationBanner}
+        ${renderAnalysisDetails(result, healthMessage, healthRecommendation)}
 
-        <div class="result-grid">
-            <div class="result-item">
-                <div class="result-value" style="color: ${result.risk_metrics.color};">${esc(healthMessage)}</div>
-                <div class="result-label">健康状态</div>
-            </div>
-            <div class="result-item">
-                <div class="result-value">${Math.round(result.detection.confidence * 100)}%</div>
-                <div class="result-label">置信度</div>
-            </div>
-            <div class="result-item">
-                <div class="result-value">${result.risk_metrics.risk_level}%</div>
-                <div class="result-label">风险等级</div>
-            </div>
-            <div class="result-item">
-                <div class="result-value">${result.risk_metrics.cure_rate}%</div>
-                <div class="result-label">治愈概率</div>
-            </div>
-        </div>
-
-        ${renderStoolProfile(result.stool_profile)}
-
-        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 4px solid ${result.risk_metrics.color}; margin: 20px 0;">
-            <h4 style="margin-bottom: 10px; color: #155724;">
-                <i class="fas fa-stethoscope"></i> 检测特征
-            </h4>
-            <p style="color: #155724; margin: 0; margin-bottom: 15px;">${formatFeatures(result.detection.features)}</p>
-            
-            <h4 style="margin-bottom: 10px; color: #155724;">
-                <i class="fas fa-heartbeat"></i> 健康建议
-            </h4>
-            <p style="color: #155724; margin: 0;">${esc(healthRecommendation)}</p>
-        </div>
-        
         <div style="background: #fff3cd; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 16px 0; font-size: 0.85rem; color: #664d03;">
             <i class="fas fa-exclamation-triangle"></i>
             <strong>免责声明：</strong>本分析结果由 AI 模型/模拟算法自动生成，仅供参考，
