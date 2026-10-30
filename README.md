@@ -1,6 +1,6 @@
 # CatHealth Monitor - 貓咪健康監測系統
 
-基於 YOLOv8 的貓咪排泄物智能分析系統，幫助貓主人通過排泄物圖片快速了解貓咪健康狀況。
+基於 YOLOv11 的貓咪排泄物智能分析系統，幫助貓主人通過排泄物圖片快速了解貓咪健康狀況。
 
 ## 功能特點
 
@@ -15,7 +15,7 @@
 - **前端**：HTML5 + CSS3 + JavaScript（PWA / Capacitor）
 - **後端**：Flask（`backend/flask/app.py`）
 - **資料庫**：SQLite（`backend/flask/database.py`）
-- **AI 模型**：YOLOv8（`backend/flask/models/best.pt`）
+- **AI 模型**：YOLOv11（`backend/flask/models/best.pt`）
 - **部署**：Render（`render.yaml` + `main.py`）
 
 ## 環境要求
@@ -204,5 +204,5 @@ localStorage.setItem('tencent_map_key', '你的騰訊地圖 API Key');
 
 ---
 
-*最後更新：2026-09-15*  
-*版本：v1.0.0*
+*最後更新：2026-10-30*  
+*版本：v2.0.1*
